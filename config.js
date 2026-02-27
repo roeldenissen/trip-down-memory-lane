@@ -90,12 +90,12 @@ const CONFIG = {
           text: "Wat gebeurde er met de fiets van elk paaltje?",
           answer: "Kapot",
           hint: "Kaduuk"
-        }
+        },
         {
          text: "Wat was Wilma met het weekendje weg met de kids vergeten?",
           answer: "Pyjama",
           hint: "Je slaapt erin"
-        }
+        },
         {
           text: "Bij welke winkel is de E-bike gestolen?",
           answer: "Action",

@@ -81,20 +81,25 @@ const CONFIG = {
     },
     {
       id: 3,
-      title: "De verlovingsplek",
-      address: "Adres stop 3, Berkel-Enschot",
-      description: "Op deze bijzondere plek werd de grote vraag gesteld.",
-      video: "",
+      title: "Textielmuseum",
+      address: "Goirkestraat 96, Tilburg",
+      description: "Een stukje historie van jullie stad",
+      video: "assets/videos/stop3.mp4",
       questions: [
         {
-          text: "In welk jaar zijn jullie verloofd?",
-          answer: "1984",
-          hint: ""
+          text: "Wat gebeurde er met de fiets van elk paaltje?",
+          answer: "Kapot",
+          hint: "Kaduuk"
         },
         {
-          text: "Was het een verrassing?",
-          answer: "Ja",
-          hint: ""
+         text: "Wat was Wilma met het weekendje weg met de kids vergeten?",
+          answer: "Pyjama",
+          hint: "Je slaapt erin"
+        }
+        {
+          text: "Bij welke winkel is de E-bike gestolen?",
+          answer: "Action",
+          hint: "Goedkoop"
         }
       ]
     },

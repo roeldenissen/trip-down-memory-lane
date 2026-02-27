@@ -479,6 +479,36 @@
     .route-marker.start { padding-bottom: 4px; }
     .route-marker.finish { padding-top: 4px; }
 
+    /* Last stop = finish styling */
+    .stop-list-item.is-finish {
+      border-left-color: var(--gold) !important;
+      background: linear-gradient(135deg, rgba(255,255,255,0.97) 0%, rgba(253,248,238,0.97) 100%);
+      box-shadow: 0 4px 24px rgba(201, 168, 76, 0.25);
+    }
+    .stop-list-item.is-finish .stop-list-number {
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+      font-size: 14px;
+    }
+    .stop-list-item.is-finish.completed {
+      border-left-color: var(--success) !important;
+      background: linear-gradient(135deg, rgba(255,255,255,0.97) 0%, rgba(240,248,240,0.97) 100%);
+    }
+    .stop-list-item.is-finish.completed .stop-list-number {
+      background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+    }
+    .finish-badge {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gold-dark);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 2px;
+    }
+    .finish-badge-icon { font-size: 13px; }
+
     /* ============ STOP SCREEN ============ */
     #stop-screen {
       background: var(--cream);
@@ -795,6 +825,28 @@
       margin: 0 auto 20px;
       font-size: 40px;
       color: white;
+    }
+
+    /* ============ CONFETTI ============ */
+    .confetti-container {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 200;
+      overflow: hidden;
+    }
+    .confetti-piece {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      top: -10px;
+      opacity: 0;
+      animation: confetti-fall linear forwards;
+    }
+    @keyframes confetti-fall {
+      0% { opacity: 1; transform: translateY(0) rotateZ(0deg) rotateX(0deg); }
+      75% { opacity: 1; }
+      100% { opacity: 0; transform: translateY(100vh) rotateZ(720deg) rotateX(360deg); }
     }
 
     .success-title {
@@ -1126,16 +1178,21 @@
       CONFIG.stops.forEach((stop, index) => {
         const status = getStopStatus(stop, index);
         const marginPct = (positions[index] * 100).toFixed(1);
+        const isFinish = index === CONFIG.stops.length - 1;
+        const finishClass = isFinish ? ' is-finish' : '';
 
         // Connector between stops
         html += `<div class="stop-list-connector"></div>`;
 
         const clickable = status === 'completed' ? ` onclick="showStop(${stop.id}, true)"` : '';
-        html += `<div class="stop-list-item ${status}" style="margin-left:${marginPct}%"${clickable}>`;
-        html += `<div class="stop-list-number">${stop.id}</div>`;
+        html += `<div class="stop-list-item ${status}${finishClass}" style="margin-left:${marginPct}%"${clickable}>`;
+        html += `<div class="stop-list-number">${isFinish ? '&#127937;' : stop.id}</div>`;
         html += `<div class="stop-list-info">`;
         html += `<div class="stop-list-title">${escapeHtml(stop.title)}</div>`;
         html += `<div class="stop-list-address">${escapeHtml(stop.address)}</div>`;
+        if (isFinish) {
+          html += `<div class="finish-badge"><span class="finish-badge-icon">&#127881;</span> De finish!</div>`;
+        }
         html += `</div>`;
         html += `<div class="stop-list-action">`;
         if (status === 'completed') {
@@ -1153,13 +1210,6 @@
         html += `</div>`;
         html += `</div>`;
       });
-
-      // Finish marker
-      html += `<div class="stop-list-connector"></div>`;
-      html += `<div class="route-marker finish">`;
-      html += `<div class="route-marker-icon">&#127881;</div>`;
-      html += `<div class="route-marker-text">De finish!</div>`;
-      html += `</div>`;
 
       html += `</div>`; // close route-items
 
@@ -1674,6 +1724,11 @@
       }
 
       overlay.classList.add('show');
+
+      // Launch confetti on the last stop or when all answers are correct
+      if (isLastStop || correctCount === totalQuestions) {
+        setTimeout(() => launchConfetti(), 300);
+      }
     }
 
     function closeSuccessAndContinue() {
@@ -1685,10 +1740,47 @@
       setTimeout(() => {
         if (isLastStop) {
           showScreen('finish-screen');
+          // Extra confetti burst on the finish screen!
+          setTimeout(() => launchConfetti(), 400);
         } else {
           showStopList();
         }
       }, 300);
+    }
+
+    // ============ CONFETTI ============
+    function launchConfetti() {
+      const container = document.createElement('div');
+      container.className = 'confetti-container';
+      document.body.appendChild(container);
+
+      const colors = ['#C9A84C', '#E8D5A3', '#5A8F5A', '#D9534F', '#5BC0DE', '#F0AD4E', '#FF69B4', '#9B59B6'];
+      const shapes = ['square', 'circle', 'strip'];
+      const count = 80;
+
+      for (let i = 0; i < count; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const shape = shapes[Math.floor(Math.random() * shapes.length)];
+        const left = Math.random() * 100;
+        const size = 6 + Math.random() * 10;
+        const duration = 2 + Math.random() * 2;
+        const delay = Math.random() * 0.8;
+
+        piece.style.left = left + '%';
+        piece.style.backgroundColor = color;
+        piece.style.width = shape === 'strip' ? (size * 0.4) + 'px' : size + 'px';
+        piece.style.height = shape === 'strip' ? (size * 1.5) + 'px' : size + 'px';
+        piece.style.borderRadius = shape === 'circle' ? '50%' : shape === 'strip' ? '2px' : '0';
+        piece.style.animationDuration = duration + 's';
+        piece.style.animationDelay = delay + 's';
+
+        container.appendChild(piece);
+      }
+
+      // Clean up after animation completes
+      setTimeout(() => container.remove(), 5000);
     }
 
     // ============ UTILS ============

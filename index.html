@@ -200,9 +200,7 @@
     /* ============ STOP LIST SCREEN ============ */
     #list-screen {
       flex-direction: column;
-      background:
-        /* Subtle nature/landscape gradient */
-        linear-gradient(170deg, #e9f0e1 0%, #dce7cf 25%, #d3dec8 50%, #cdd8c0 75%, #c5cfb8 100%);
+      background: #dde8cd;
     }
 
     .list-header {
@@ -240,90 +238,79 @@
       flex: 1;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding: 24px 20px 40px;
+      padding: 20px 24px 60px;
       position: relative;
     }
 
-    /* The route line (vertical dashed path connecting stops) */
-    .route-line {
+    /* SVG route background */
+    .route-svg-bg {
       position: absolute;
-      left: 29px;
       top: 0;
-      bottom: 0;
-      width: 4px;
-      background: repeating-linear-gradient(
-        to bottom,
-        var(--gold-light) 0px,
-        var(--gold-light) 8px,
-        transparent 8px,
-        transparent 16px
-      );
-      border-radius: 2px;
+      left: 0;
+      width: 100%;
+      height: 100%;
       z-index: 0;
+      pointer-events: none;
     }
 
-    /* Filled route line for completed portion */
-    .route-line-filled {
+    /* Nature decorations */
+    .nature-deco {
       position: absolute;
-      left: 29px;
-      top: 0;
-      width: 4px;
-      background: var(--success);
-      border-radius: 2px;
       z-index: 1;
-      transition: height 0.5s ease;
+      pointer-events: none;
+      opacity: 0.5;
+      font-size: 20px;
     }
 
+    /* Route items container for zigzag layout */
+    .route-items {
+      position: relative;
+      z-index: 2;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* Stop card in zigzag layout */
     .stop-list-item {
       display: flex;
       align-items: center;
-      gap: 16px;
-      background: rgba(255, 255, 255, 0.92);
+      gap: 14px;
+      background: rgba(255, 255, 255, 0.93);
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
       border-radius: var(--radius);
-      padding: 18px 20px;
-      margin-left: 46px;
-      margin-bottom: 0;
-      box-shadow: 0 2px 12px rgba(92, 64, 51, 0.08);
+      padding: 16px 18px;
+      width: 52%;
+      max-width: 380px;
+      box-shadow: 0 3px 16px rgba(92, 64, 51, 0.1);
       transition: all 0.3s;
       border-left: 4px solid transparent;
       position: relative;
       z-index: 2;
     }
 
-    /* Connector spacing between items */
-    .stop-list-connector {
-      height: 24px;
-      position: relative;
-      z-index: 0;
+    /* Zigzag: even items left, odd items right */
+    .stop-list-item.pos-left {
+      margin-left: 4%;
+      margin-right: auto;
     }
 
-    /* Route marker dot on the line — sits on the route-line */
-    .stop-list-item::before {
-      content: '';
-      position: absolute;
-      left: -21px;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: var(--gold-light);
-      border: 2px solid #c8d4b8;
-      z-index: 3;
+    .stop-list-item.pos-right {
+      margin-left: auto;
+      margin-right: 4%;
+    }
+
+    /* Connector spacing between items */
+    .stop-list-connector {
+      height: 20px;
+      position: relative;
+      z-index: 0;
     }
 
     /* Completed stop */
     .stop-list-item.completed {
       border-left-color: var(--success);
       cursor: pointer;
-    }
-
-    .stop-list-item.completed::before {
-      background: var(--success);
-      border-color: #a8d4a8;
-      box-shadow: 0 0 0 3px rgba(90, 143, 90, 0.2);
     }
 
     .stop-list-item.completed:active {
@@ -337,27 +324,18 @@
     /* Current stop */
     .stop-list-item.current {
       border-left-color: var(--gold);
-      box-shadow: 0 4px 24px rgba(201, 168, 76, 0.25);
+      box-shadow: 0 4px 24px rgba(201, 168, 76, 0.3);
       background: rgba(255, 255, 255, 0.97);
-    }
-
-    .stop-list-item.current::before {
-      background: var(--gold);
-      border-color: var(--gold-light);
-      width: 16px;
-      height: 16px;
-      left: -21px;
-      box-shadow: 0 0 0 4px rgba(201, 168, 76, 0.2), 0 0 12px rgba(201, 168, 76, 0.3);
-      animation: pulse-marker 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse-marker {
-      0%, 100% { box-shadow: 0 0 0 4px rgba(201, 168, 76, 0.2), 0 0 12px rgba(201, 168, 76, 0.3); }
-      50% { box-shadow: 0 0 0 8px rgba(201, 168, 76, 0.1), 0 0 20px rgba(201, 168, 76, 0.2); }
     }
 
     .stop-list-item.current .stop-list-number {
       background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+      animation: pulse-number 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-number {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(201, 168, 76, 0); }
+      50% { box-shadow: 0 0 0 6px rgba(201, 168, 76, 0.2); }
     }
 
     /* Locked stop */
@@ -365,13 +343,8 @@
       pointer-events: none;
       user-select: none;
       -webkit-user-select: none;
-      background: rgba(255, 255, 255, 0.5);
-    }
-
-    .stop-list-item.locked::before {
-      background: #bbb;
-      border-color: #ccc;
-      opacity: 0.6;
+      background: rgba(255, 255, 255, 0.45);
+      box-shadow: 0 2px 8px rgba(92, 64, 51, 0.05);
     }
 
     .stop-list-item.locked .stop-list-info {
@@ -379,7 +352,7 @@
     }
 
     .stop-list-item.locked .stop-list-number {
-      background: #ccc;
+      background: #bbb;
     }
 
     .stop-list-item.locked .stop-list-action {
@@ -387,43 +360,51 @@
     }
 
     .stop-list-number {
-      width: 44px;
-      height: 44px;
+      width: 42px;
+      height: 42px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 700;
-      font-size: 18px;
+      font-size: 17px;
       color: var(--white);
       flex-shrink: 0;
-      background: #ccc;
+      background: #bbb;
     }
 
     .stop-list-info {
       flex: 1;
       transition: filter 0.3s;
+      min-width: 0;
     }
 
     .stop-list-title {
       font-family: 'Playfair Display', Georgia, serif;
-      font-size: 17px;
+      font-size: 16px;
       font-weight: 600;
       color: var(--brown);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .stop-list-address {
-      font-size: 13px;
+      font-size: 12px;
       color: var(--text-light);
-      margin-top: 3px;
+      margin-top: 2px;
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .stop-list-address::before {
       content: "\1F4CD";
-      font-size: 12px;
+      font-size: 11px;
+      flex-shrink: 0;
     }
 
     .stop-list-action {
@@ -434,33 +415,33 @@
     .stop-list-check {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .stop-list-check-icon {
-      width: 36px;
-      height: 36px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       background: var(--success);
       color: white;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 700;
       flex-shrink: 0;
     }
 
     .stop-list-score {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
       color: var(--success);
       white-space: nowrap;
     }
 
     .btn-arrive {
-      padding: 12px 24px;
-      font-size: 16px;
+      padding: 10px 20px;
+      font-size: 14px;
       border-radius: 50px;
       border: none;
       background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
@@ -478,7 +459,7 @@
     }
 
     .stop-list-lock {
-      font-size: 22px;
+      font-size: 20px;
       opacity: 0.3;
     }
 
@@ -487,16 +468,14 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-left: 14px;
-      padding: 10px 0;
+      padding: 8px 0;
       position: relative;
       z-index: 2;
+      justify-content: center;
     }
 
     .route-marker-icon {
-      font-size: 22px;
-      width: 32px;
-      text-align: center;
+      font-size: 24px;
     }
 
     .route-marker-text {
@@ -881,6 +860,16 @@
       .start-subtitle { font-size: 20px; }
       .stop-content { padding: 16px; }
       .finish-title { font-size: 32px; }
+      /* On narrow screens, stack vertically */
+      .stop-list-item {
+        width: 88%;
+        max-width: none;
+      }
+      .stop-list-item.pos-left,
+      .stop-list-item.pos-right {
+        margin-left: 6%;
+        margin-right: 6%;
+      }
     }
 
     @media (min-width: 1024px) {
@@ -889,10 +878,12 @@
         margin: 0 auto;
         padding: 32px;
       }
-      .stop-list {
-        max-width: 700px;
-        margin: 0 auto;
-        position: relative;
+      .route-items {
+        max-width: 900px;
+      }
+      .stop-list-item {
+        width: 44%;
+        max-width: 400px;
       }
     }
 
@@ -1104,10 +1095,11 @@
       const container = document.getElementById('stop-list-area');
       updateCompletedCount();
 
+      const totalStops = CONFIG.stops.length;
       let html = '';
 
-      // Route line (dashed background)
-      html += `<div class="route-line"></div>`;
+      // Route items wrapper
+      html += `<div class="route-items" id="route-items">`;
 
       // Start marker
       html += `<div class="route-marker start">`;
@@ -1117,14 +1109,13 @@
 
       CONFIG.stops.forEach((stop, index) => {
         const status = getStopStatus(stop, index);
+        const side = index % 2 === 0 ? 'pos-left' : 'pos-right';
 
         // Connector between stops
-        if (index > 0) {
-          html += `<div class="stop-list-connector"></div>`;
-        }
+        html += `<div class="stop-list-connector"></div>`;
 
         const clickable = status === 'completed' ? ` onclick="showStop(${stop.id}, true)"` : '';
-        html += `<div class="stop-list-item ${status}"${clickable}>`;
+        html += `<div class="stop-list-item ${status} ${side}"${clickable}>`;
         html += `<div class="stop-list-number">${stop.id}</div>`;
         html += `<div class="stop-list-info">`;
         html += `<div class="stop-list-title">${escapeHtml(stop.title)}</div>`;
@@ -1154,34 +1145,13 @@
       html += `<div class="route-marker-text">De finish!</div>`;
       html += `</div>`;
 
+      html += `</div>`; // close route-items
+
       container.innerHTML = html;
 
-      // Calculate and set the filled route line height
+      // Draw the SVG winding path after layout is done
       requestAnimationFrame(() => {
-        const filledLine = container.querySelector('.route-line-filled');
-        const items = container.querySelectorAll('.stop-list-item');
-        let lastCompletedItem = null;
-
-        items.forEach(item => {
-          if (item.classList.contains('completed')) lastCompletedItem = item;
-        });
-
-        // Add filled line dynamically
-        let existingFilled = container.querySelector('.route-line-filled');
-        if (!existingFilled) {
-          existingFilled = document.createElement('div');
-          existingFilled.className = 'route-line-filled';
-          container.appendChild(existingFilled);
-        }
-
-        if (lastCompletedItem) {
-          const containerRect = container.getBoundingClientRect();
-          const itemRect = lastCompletedItem.getBoundingClientRect();
-          const height = (itemRect.top + itemRect.height / 2) - containerRect.top + container.scrollTop;
-          existingFilled.style.height = height + 'px';
-        } else {
-          existingFilled.style.height = '0px';
-        }
+        drawRoutePath(container);
 
         // Scroll to current stop
         const currentItem = container.querySelector('.stop-list-item.current');
@@ -1189,6 +1159,196 @@
           currentItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
       });
+    }
+
+    function drawRoutePath(container) {
+      // Remove previous SVG if any
+      const oldSvg = container.querySelector('.route-svg-bg');
+      if (oldSvg) oldSvg.remove();
+
+      const items = container.querySelectorAll('.stop-list-item');
+      if (items.length === 0) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const scrollTop = container.scrollTop;
+      const svgW = container.scrollWidth;
+      const svgH = container.scrollHeight;
+
+      // Collect center points of each stop card
+      const points = [];
+      items.forEach(item => {
+        const r = item.getBoundingClientRect();
+        const cx = (r.left + r.width / 2) - containerRect.left;
+        const cy = (r.top + r.height / 2) - containerRect.top + scrollTop;
+        points.push({ x: cx, y: cy, el: item });
+      });
+
+      // Add start and end points
+      const startMarker = container.querySelector('.route-marker.start');
+      const finishMarker = container.querySelector('.route-marker.finish');
+      let startPt = null, endPt = null;
+      if (startMarker) {
+        const r = startMarker.getBoundingClientRect();
+        startPt = { x: (r.left + r.width / 2) - containerRect.left, y: (r.bottom) - containerRect.top + scrollTop };
+      }
+      if (finishMarker) {
+        const r = finishMarker.getBoundingClientRect();
+        endPt = { x: (r.left + r.width / 2) - containerRect.left, y: (r.top) - containerRect.top + scrollTop };
+      }
+
+      // Build smooth bezier path through all points
+      const allPts = [];
+      if (startPt) allPts.push(startPt);
+      allPts.push(...points);
+      if (endPt) allPts.push(endPt);
+
+      let pathD = `M ${allPts[0].x} ${allPts[0].y}`;
+      for (let i = 1; i < allPts.length; i++) {
+        const prev = allPts[i - 1];
+        const curr = allPts[i];
+        const midY = (prev.y + curr.y) / 2;
+        pathD += ` C ${prev.x} ${midY}, ${curr.x} ${midY}, ${curr.x} ${curr.y}`;
+      }
+
+      // Find how far completed progress goes
+      let completedIdx = -1;
+      items.forEach((item, i) => {
+        if (item.classList.contains('completed')) completedIdx = i;
+      });
+
+      // Nature decorations (trees, bushes, flowers)
+      const decos = [
+        { e: '&#127794;', s: 28 },  // tree
+        { e: '&#127795;', s: 24 },  // evergreen
+        { e: '&#127793;', s: 18 },  // sunflower
+        { e: '&#127800;', s: 16 },  // cherry blossom
+        { e: '&#127807;', s: 20 },  // herb/bush
+        { e: '&#127806;', s: 16 },  // ear of rice/wheat
+      ];
+
+      let decoHtml = '';
+      // Place nature decorations semi-randomly along the route
+      const rng = (seed) => { let s = seed; return () => { s = (s * 16807 + 0) % 2147483647; return s / 2147483647; }; };
+      const rand = rng(42);
+      for (let i = 0; i < allPts.length - 1; i++) {
+        const p = allPts[i];
+        const numDecos = 2 + Math.floor(rand() * 2);
+        for (let d = 0; d < numDecos; d++) {
+          const deco = decos[Math.floor(rand() * decos.length)];
+          // Place on opposite side of the card
+          const offsetX = (rand() > 0.5 ? 1 : -1) * (120 + rand() * 200);
+          const offsetY = (rand() - 0.5) * 60;
+          const x = Math.max(10, Math.min(svgW - 40, p.x + offsetX));
+          const y = p.y + offsetY;
+          const opacity = 0.25 + rand() * 0.25;
+          const size = deco.s + Math.floor(rand() * 8);
+          decoHtml += `<div class="nature-deco" style="left:${x}px;top:${y}px;font-size:${size}px;opacity:${opacity}">${deco.e}</div>`;
+        }
+      }
+
+      // Build SVG
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('class', 'route-svg-bg');
+      svg.setAttribute('width', svgW);
+      svg.setAttribute('height', svgH);
+      svg.style.width = svgW + 'px';
+      svg.style.height = svgH + 'px';
+
+      // Path shadow (road edge)
+      const shadow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      shadow.setAttribute('d', pathD);
+      shadow.setAttribute('fill', 'none');
+      shadow.setAttribute('stroke', 'rgba(139, 119, 90, 0.12)');
+      shadow.setAttribute('stroke-width', '18');
+      shadow.setAttribute('stroke-linecap', 'round');
+      shadow.setAttribute('stroke-linejoin', 'round');
+      svg.appendChild(shadow);
+
+      // Main path (bike road)
+      const road = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      road.setAttribute('d', pathD);
+      road.setAttribute('fill', 'none');
+      road.setAttribute('stroke', '#c4b48a');
+      road.setAttribute('stroke-width', '10');
+      road.setAttribute('stroke-linecap', 'round');
+      road.setAttribute('stroke-linejoin', 'round');
+      svg.appendChild(road);
+
+      // Center dashes (road marking)
+      const dashes = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      dashes.setAttribute('d', pathD);
+      dashes.setAttribute('fill', 'none');
+      dashes.setAttribute('stroke', 'rgba(255,255,255,0.5)');
+      dashes.setAttribute('stroke-width', '2');
+      dashes.setAttribute('stroke-dasharray', '8 12');
+      dashes.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(dashes);
+
+      // Completed portion overlay (green path)
+      if (completedIdx >= 0) {
+        const completedPts = [];
+        if (startPt) completedPts.push(startPt);
+        for (let i = 0; i <= completedIdx; i++) completedPts.push(points[i]);
+
+        let cPathD = `M ${completedPts[0].x} ${completedPts[0].y}`;
+        for (let i = 1; i < completedPts.length; i++) {
+          const prev = completedPts[i - 1];
+          const curr = completedPts[i];
+          const midY = (prev.y + curr.y) / 2;
+          cPathD += ` C ${prev.x} ${midY}, ${curr.x} ${midY}, ${curr.x} ${curr.y}`;
+        }
+
+        const greenRoad = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        greenRoad.setAttribute('d', cPathD);
+        greenRoad.setAttribute('fill', 'none');
+        greenRoad.setAttribute('stroke', '#6aaa6a');
+        greenRoad.setAttribute('stroke-width', '10');
+        greenRoad.setAttribute('stroke-linecap', 'round');
+        greenRoad.setAttribute('stroke-linejoin', 'round');
+        svg.appendChild(greenRoad);
+
+        const greenDashes = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        greenDashes.setAttribute('d', cPathD);
+        greenDashes.setAttribute('fill', 'none');
+        greenDashes.setAttribute('stroke', 'rgba(255,255,255,0.6)');
+        greenDashes.setAttribute('stroke-width', '2');
+        greenDashes.setAttribute('stroke-dasharray', '8 12');
+        greenDashes.setAttribute('stroke-linecap', 'round');
+        svg.appendChild(greenDashes);
+      }
+
+      // Stop marker dots on the path
+      points.forEach((pt, i) => {
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', pt.x);
+        circle.setAttribute('cy', pt.y);
+        const item = items[i];
+        if (item.classList.contains('completed')) {
+          circle.setAttribute('r', '7');
+          circle.setAttribute('fill', '#5A8F5A');
+          circle.setAttribute('stroke', '#fff');
+          circle.setAttribute('stroke-width', '3');
+        } else if (item.classList.contains('current')) {
+          circle.setAttribute('r', '9');
+          circle.setAttribute('fill', '#C9A84C');
+          circle.setAttribute('stroke', '#fff');
+          circle.setAttribute('stroke-width', '3');
+        } else {
+          circle.setAttribute('r', '5');
+          circle.setAttribute('fill', '#bbb');
+          circle.setAttribute('stroke', '#ddd');
+          circle.setAttribute('stroke-width', '2');
+        }
+        svg.appendChild(circle);
+      });
+
+      container.appendChild(svg);
+
+      // Add nature decorations
+      const decoContainer = document.createElement('div');
+      decoContainer.innerHTML = decoHtml;
+      decoContainer.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;';
+      container.appendChild(decoContainer);
     }
 
     // ============ STOP ============

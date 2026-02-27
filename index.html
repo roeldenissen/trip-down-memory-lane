@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Trip Down Memory Lane</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ============ RESET & BASE ============ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #C9A84C;
+      --gold-light: #E8D5A3;
+      --gold-dark: #A07D2E;
+      --cream: #FDF8EE;
+      --cream-dark: #F5ECDA;
+      --brown: #5C4033;
+      --brown-light: #8B6914;
+      --text: #3A3028;
+      --text-light: #6B5E50;
+      --white: #FFFFFF;
+      --success: #5A8F5A;
+      --success-light: #E8F5E8;
+      --shadow: 0 4px 20px rgba(92, 64, 51, 0.12);
+      --shadow-lg: 0 8px 40px rgba(92, 64, 51, 0.18);
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Lato', sans-serif;
+      background: var(--cream);
+      color: var(--text);
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'Playfair Display', serif;
+    }
+
+    /* ============ SCREENS ============ */
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+    }
+
+    .screen.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* ============ START SCREEN ============ */
+    #start-screen {
+      background: linear-gradient(145deg, #FDF8EE 0%, #F5ECDA 50%, #E8D5A3 100%);
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 40px;
+    }
+
+    .start-ornament {
+      font-size: 48px;
+      color: var(--gold);
+      margin-bottom: 10px;
+      letter-spacing: 16px;
+    }
+
+    .start-title {
+      font-size: 52px;
+      font-weight: 700;
+      color: var(--brown);
+      line-height: 1.15;
+      margin-bottom: 8px;
+    }
+
+    .start-subtitle {
+      font-size: 26px;
+      font-weight: 300;
+      color: var(--text-light);
+      margin-bottom: 6px;
+    }
+
+    .start-names {
+      font-family: 'Playfair Display', serif;
+      font-size: 36px;
+      font-weight: 600;
+      color: var(--gold-dark);
+      margin-bottom: 4px;
+    }
+
+    .start-years {
+      font-size: 20px;
+      color: var(--text-light);
+      font-weight: 300;
+      margin-bottom: 50px;
+    }
+
+    .start-years span {
+      color: var(--gold);
+      font-weight: 700;
+      font-size: 24px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 44px;
+      border: none;
+      border-radius: 50px;
+      font-family: 'Lato', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+      color: var(--white);
+      box-shadow: 0 4px 20px rgba(201, 168, 76, 0.4);
+    }
+
+    .btn-primary:hover, .btn-primary:active {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 28px rgba(201, 168, 76, 0.5);
+    }
+
+    .btn-secondary {
+      background: var(--white);
+      color: var(--brown);
+      border: 2px solid var(--gold-light);
+      box-shadow: var(--shadow);
+    }
+
+    .btn-secondary:hover, .btn-secondary:active {
+      border-color: var(--gold);
+      background: var(--cream);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, var(--success) 0%, #4A7F4A 100%);
+      color: var(--white);
+      box-shadow: 0 4px 20px rgba(90, 143, 90, 0.4);
+    }
+
+    /* ============ MAP SCREEN ============ */
+    #map-screen {
+      flex-direction: column;
+    }
+
+    .map-header {
+      background: var(--white);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      z-index: 1000;
+    }
+
+    .map-header-title {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--brown);
+    }
+
+    .map-progress {
+      font-size: 15px;
+      color: var(--text-light);
+      font-weight: 400;
+    }
+
+    .map-progress span {
+      color: var(--gold-dark);
+      font-weight: 700;
+    }
+
+    #map {
+      flex: 1;
+      z-index: 1;
+    }
+
+    /* Custom Leaflet markers */
+    .stop-marker {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+      font-family: 'Lato', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      border: 3px solid var(--white);
+    }
+
+    .stop-marker span {
+      transform: rotate(45deg);
+    }
+
+    .stop-marker.unvisited {
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+      color: var(--white);
+    }
+
+    .stop-marker.visited {
+      background: linear-gradient(135deg, var(--success) 0%, #4A7F4A 100%);
+      color: var(--white);
+    }
+
+    /* Marker popup */
+    .marker-popup {
+      text-align: center;
+      min-width: 180px;
+    }
+
+    .marker-popup h3 {
+      font-size: 16px;
+      color: var(--brown);
+      margin-bottom: 4px;
+    }
+
+    .marker-popup p {
+      font-size: 13px;
+      color: var(--text-light);
+      margin-bottom: 10px;
+    }
+
+    .marker-popup .popup-btn {
+      display: inline-block;
+      padding: 8px 20px;
+      background: var(--gold);
+      color: var(--white);
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      font-family: 'Lato', sans-serif;
+    }
+
+    .marker-popup .popup-visited {
+      color: var(--success);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* Leaflet popup styling overrides */
+    .leaflet-popup-content-wrapper {
+      border-radius: var(--radius-sm) !important;
+      box-shadow: var(--shadow-lg) !important;
+    }
+
+    .leaflet-popup-content {
+      margin: 14px 18px !important;
+    }
+
+    /* ============ STOP SCREEN ============ */
+    #stop-screen {
+      background: var(--cream);
+      flex-direction: column;
+    }
+
+    .stop-header {
+      background: var(--white);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      z-index: 10;
+    }
+
+    .back-btn {
+      background: none;
+      border: 2px solid var(--gold-light);
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--brown);
+      font-size: 20px;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+
+    .back-btn:active {
+      background: var(--cream);
+    }
+
+    .stop-header-info {
+      flex: 1;
+    }
+
+    .stop-header-number {
+      font-size: 13px;
+      color: var(--gold-dark);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .stop-header-title {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--brown);
+    }
+
+    .stop-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .stop-description {
+      font-size: 17px;
+      color: var(--text-light);
+      line-height: 1.6;
+      margin-bottom: 24px;
+      font-style: italic;
+    }
+
+    /* Video container */
+    .video-section {
+      margin-bottom: 32px;
+    }
+
+    .video-section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gold-dark);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 12px;
+    }
+
+    .video-container {
+      position: relative;
+      width: 100%;
+      padding-bottom: 56.25%;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #1a1a1a;
+      box-shadow: var(--shadow);
+    }
+
+    .video-container iframe,
+    .video-container video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .video-placeholder {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #888;
+      font-size: 16px;
+      gap: 8px;
+    }
+
+    .video-placeholder-icon {
+      font-size: 48px;
+      opacity: 0.5;
+    }
+
+    /* Questions */
+    .questions-section {
+      margin-bottom: 24px;
+    }
+
+    .questions-section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gold-dark);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 16px;
+    }
+
+    .question-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+      border-left: 4px solid var(--gold);
+    }
+
+    .question-card.answered {
+      border-left-color: var(--success);
+    }
+
+    .question-number {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .question-card.answered .question-number {
+      color: var(--success);
+    }
+
+    .question-text {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--brown);
+      line-height: 1.4;
+      margin-bottom: 16px;
+    }
+
+    .answer-input {
+      width: 100%;
+      padding: 14px 18px;
+      border: 2px solid var(--cream-dark);
+      border-radius: var(--radius-sm);
+      font-family: 'Lato', sans-serif;
+      font-size: 17px;
+      color: var(--text);
+      background: var(--cream);
+      resize: vertical;
+      min-height: 60px;
+      transition: border-color 0.2s;
+    }
+
+    .answer-input:focus {
+      outline: none;
+      border-color: var(--gold);
+      background: var(--white);
+    }
+
+    .answer-input::placeholder {
+      color: #B8AFA3;
+    }
+
+    .save-answer-btn {
+      margin-top: 12px;
+      padding: 12px 28px;
+      font-size: 16px;
+    }
+
+    .answer-saved {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+      color: var(--success);
+      font-size: 15px;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .answer-saved.show {
+      opacity: 1;
+    }
+
+    /* ============ ANIMATIONS ============ */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-in {
+      animation: fadeInUp 0.6s ease forwards;
+    }
+
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+    .delay-5 { animation-delay: 0.5s; }
+
+    /* ============ RESPONSIVE ============ */
+    @media (max-width: 768px) {
+      .start-title { font-size: 36px; }
+      .start-names { font-size: 28px; }
+      .start-subtitle { font-size: 20px; }
+      .stop-content { padding: 16px; }
+    }
+
+    @media (min-width: 1024px) {
+      .stop-content {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 32px;
+      }
+    }
+
+    /* Scrollbar styling */
+    .stop-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .stop-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .stop-content::-webkit-scrollbar-thumb {
+      background: var(--gold-light);
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========== START SCREEN ========== -->
+  <div id="start-screen" class="screen active">
+    <div class="start-ornament">&#10045; &#10045; &#10045;</div>
+    <h1 class="start-title">Trip Down<br>Memory Lane</h1>
+    <p class="start-subtitle">Een fietstocht door de herinneringen</p>
+    <p class="start-names" id="start-names"></p>
+    <p class="start-years" id="start-years"></p>
+    <button class="btn btn-primary" onclick="showMap()">
+      Start de tocht &#10148;
+    </button>
+  </div>
+
+  <!-- ========== MAP SCREEN ========== -->
+  <div id="map-screen" class="screen">
+    <div class="map-header">
+      <h2 class="map-header-title">Trip Down Memory Lane</h2>
+      <div class="map-progress">
+        <span id="visited-count">0</span> / <span id="total-count">0</span> stops bezocht
+      </div>
+    </div>
+    <div id="map"></div>
+  </div>
+
+  <!-- ========== STOP SCREEN ========== -->
+  <div id="stop-screen" class="screen">
+    <div class="stop-header">
+      <button class="back-btn" onclick="showMap()">&#8592;</button>
+      <div class="stop-header-info">
+        <div class="stop-header-number" id="stop-number"></div>
+        <h2 class="stop-header-title" id="stop-title"></h2>
+      </div>
+    </div>
+    <div class="stop-content" id="stop-content">
+      <!-- Dynamically filled -->
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Config -->
+  <script src="config.js"></script>
+
+  <!-- App Logic -->
+  <script>
+    // ============ STATE ============
+    let map = null;
+    let markers = [];
+    let currentStop = null;
+    let visitedStops = new Set();
+    let answers = {};
+
+    // ============ INIT ============
+    function init() {
+      // Load saved state
+      loadState();
+
+      // Populate start screen
+      const { name1, name2, years } = CONFIG.couple;
+      document.getElementById('start-names').textContent = `${name1} & ${name2}`;
+      document.getElementById('start-years').innerHTML = `<span>${years}</span> jaar getrouwd`;
+      document.getElementById('total-count').textContent = CONFIG.stops.length;
+      updateVisitedCount();
+    }
+
+    // ============ PERSISTENCE ============
+    function loadState() {
+      try {
+        const saved = localStorage.getItem('trip-memory-lane-state');
+        if (saved) {
+          const state = JSON.parse(saved);
+          visitedStops = new Set(state.visited || []);
+          answers = state.answers || {};
+        }
+      } catch (e) {
+        console.warn('Could not load saved state:', e);
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem('trip-memory-lane-state', JSON.stringify({
+          visited: Array.from(visitedStops),
+          answers: answers
+        }));
+      } catch (e) {
+        console.warn('Could not save state:', e);
+      }
+    }
+
+    function updateVisitedCount() {
+      document.getElementById('visited-count').textContent = visitedStops.size;
+    }
+
+    // ============ NAVIGATION ============
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    function showMap() {
+      showScreen('map-screen');
+      if (!map) {
+        initMap();
+      } else {
+        // Refresh marker styles in case visited status changed
+        updateMarkers();
+        map.invalidateSize();
+      }
+    }
+
+    function showStop(stopId) {
+      const stop = CONFIG.stops.find(s => s.id === stopId);
+      if (!stop) return;
+
+      currentStop = stop;
+      visitedStops.add(stopId);
+      saveState();
+      updateVisitedCount();
+
+      // Fill header
+      document.getElementById('stop-number').textContent = `Stop ${stop.id} van ${CONFIG.stops.length}`;
+      document.getElementById('stop-title').textContent = stop.title;
+
+      // Build content
+      const content = document.getElementById('stop-content');
+      content.scrollTop = 0;
+
+      let html = '';
+
+      // Description
+      html += `<p class="stop-description animate-in">${escapeHtml(stop.description)}</p>`;
+
+      // Video
+      html += `<div class="video-section animate-in delay-1">`;
+      html += `<div class="video-section-title">Bekijk de video</div>`;
+      html += `<div class="video-container">`;
+
+      if (stop.video && stop.video.url) {
+        if (stop.video.type === 'youtube') {
+          html += `<iframe src="https://www.youtube.com/embed/${stop.video.url}?rel=0&playsinline=1"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen></iframe>`;
+        } else if (stop.video.type === 'mp4') {
+          html += `<video controls playsinline>
+                    <source src="${stop.video.url}" type="video/mp4">
+                    Je browser ondersteunt geen video.
+                  </video>`;
+        }
+      } else {
+        html += `<div class="video-placeholder">
+                  <div class="video-placeholder-icon">&#127916;</div>
+                  <div>Video wordt later toegevoegd</div>
+                </div>`;
+      }
+
+      html += `</div></div>`;
+
+      // Questions
+      if (stop.questions && stop.questions.length > 0) {
+        html += `<div class="questions-section animate-in delay-2">`;
+        html += `<div class="questions-section-title">Beantwoord de ${stop.questions.length === 1 ? 'vraag' : 'vragen'}</div>`;
+
+        stop.questions.forEach((q, idx) => {
+          const answerKey = `${stop.id}-${idx}`;
+          const savedAnswer = answers[answerKey] || '';
+          const isAnswered = savedAnswer.trim().length > 0;
+
+          html += `<div class="question-card ${isAnswered ? 'answered' : ''}" id="qcard-${answerKey}">`;
+          html += `<div class="question-number">${stop.questions.length > 1 ? `Vraag ${idx + 1}` : 'De vraag'}</div>`;
+          html += `<div class="question-text">${escapeHtml(q.text)}</div>`;
+          html += `<textarea class="answer-input"
+                    id="answer-${answerKey}"
+                    placeholder="Typ jullie antwoord hier..."
+                    rows="2">${escapeHtml(savedAnswer)}</textarea>`;
+          html += `<div style="display: flex; align-items: center; gap: 12px;">`;
+          html += `<button class="btn btn-success save-answer-btn" onclick="saveAnswer('${answerKey}')">
+                    Bewaar antwoord
+                  </button>`;
+          html += `<span class="answer-saved" id="saved-${answerKey}">&#10003; Opgeslagen!</span>`;
+          html += `</div>`;
+          html += `</div>`;
+        });
+
+        html += `</div>`;
+      }
+
+      content.innerHTML = html;
+      showScreen('stop-screen');
+
+      // Update markers on map
+      updateMarkers();
+    }
+
+    // ============ ANSWERS ============
+    function saveAnswer(answerKey) {
+      const input = document.getElementById(`answer-${answerKey}`);
+      if (!input) return;
+
+      answers[answerKey] = input.value;
+      saveState();
+
+      // Update card style
+      const card = document.getElementById(`qcard-${answerKey}`);
+      if (card && input.value.trim()) {
+        card.classList.add('answered');
+      } else if (card) {
+        card.classList.remove('answered');
+      }
+
+      // Show saved indicator
+      const savedEl = document.getElementById(`saved-${answerKey}`);
+      if (savedEl) {
+        savedEl.classList.add('show');
+        setTimeout(() => savedEl.classList.remove('show'), 2000);
+      }
+    }
+
+    // ============ MAP ============
+    function initMap() {
+      map = L.map('map', {
+        zoomControl: true,
+        attributionControl: false
+      }).setView(CONFIG.mapCenter, CONFIG.mapZoom);
+
+      // Tile layer - warm/vintage style
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19
+      }).addTo(map);
+
+      // Add attribution in corner
+      L.control.attribution({ position: 'bottomright' })
+        .addAttribution('&copy; OpenStreetMap')
+        .addTo(map);
+
+      // Draw route line
+      const routePoints = CONFIG.route.length > 0
+        ? CONFIG.route
+        : CONFIG.stops.map(s => [s.lat, s.lng]);
+
+      L.polyline(routePoints, {
+        color: '#C9A84C',
+        weight: 4,
+        opacity: 0.6,
+        dashArray: '10, 10',
+        lineJoin: 'round'
+      }).addTo(map);
+
+      // Add markers
+      CONFIG.stops.forEach(stop => {
+        const isVisited = visitedStops.has(stop.id);
+        const marker = createMarker(stop, isVisited);
+        markers.push({ id: stop.id, marker });
+      });
+
+      // Fit map to show all stops
+      if (CONFIG.stops.length > 0) {
+        const bounds = L.latLngBounds(CONFIG.stops.map(s => [s.lat, s.lng]));
+        map.fitBounds(bounds, { padding: [50, 50] });
+      }
+    }
+
+    function createMarker(stop, isVisited) {
+      const markerHtml = `<div class="stop-marker ${isVisited ? 'visited' : 'unvisited'}">
+                            <span>${stop.id}</span>
+                          </div>`;
+
+      const icon = L.divIcon({
+        html: markerHtml,
+        className: '',
+        iconSize: [40, 40],
+        iconAnchor: [20, 40],
+        popupAnchor: [0, -42]
+      });
+
+      const marker = L.marker([stop.lat, stop.lng], { icon }).addTo(map);
+
+      // Popup content
+      const visitedLabel = isVisited
+        ? `<div class="popup-visited">&#10003; Bezocht</div>`
+        : '';
+
+      const popupHtml = `<div class="marker-popup">
+                          <h3>${escapeHtml(stop.title)}</h3>
+                          <p>${escapeHtml(stop.description)}</p>
+                          ${visitedLabel}
+                          <button class="popup-btn" onclick="showStop(${stop.id})">
+                            ${isVisited ? 'Opnieuw bekijken' : 'Open deze stop'}
+                          </button>
+                        </div>`;
+
+      marker.bindPopup(popupHtml);
+
+      return marker;
+    }
+
+    function updateMarkers() {
+      if (!map) return;
+
+      // Remove existing markers
+      markers.forEach(m => map.removeLayer(m.marker));
+      markers = [];
+
+      // Re-create markers with updated visited status
+      CONFIG.stops.forEach(stop => {
+        const isVisited = visitedStops.has(stop.id);
+        const marker = createMarker(stop, isVisited);
+        markers.push({ id: stop.id, marker });
+      });
+    }
+
+    // ============ UTILS ============
+    function escapeHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // ============ START ============
+    init();
+  </script>
+</body>
+</html>

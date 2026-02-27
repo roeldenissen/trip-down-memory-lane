@@ -7,14 +7,51 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Trip Down Memory Lane</title>
 
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
-
   <style>
+    /* ============ FONTS (offline) ============ */
+    @font-face {
+      font-family: 'Playfair Display';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url(assets/fonts/playfair-display-latin.woff2) format('woff2');
+    }
+    @font-face {
+      font-family: 'Playfair Display';
+      font-style: normal;
+      font-weight: 600;
+      font-display: swap;
+      src: url(assets/fonts/playfair-display-latin.woff2) format('woff2');
+    }
+    @font-face {
+      font-family: 'Playfair Display';
+      font-style: normal;
+      font-weight: 700;
+      font-display: swap;
+      src: url(assets/fonts/playfair-display-latin.woff2) format('woff2');
+    }
+    @font-face {
+      font-family: 'Lato';
+      font-style: normal;
+      font-weight: 300;
+      font-display: swap;
+      src: url(assets/fonts/lato-300-latin.woff2) format('woff2');
+    }
+    @font-face {
+      font-family: 'Lato';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url(assets/fonts/lato-400-latin.woff2) format('woff2');
+    }
+    @font-face {
+      font-family: 'Lato';
+      font-style: normal;
+      font-weight: 700;
+      font-display: swap;
+      src: url(assets/fonts/lato-700-latin.woff2) format('woff2');
+    }
+
     /* ============ RESET & BASE ============ */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -25,12 +62,10 @@
       --cream: #FDF8EE;
       --cream-dark: #F5ECDA;
       --brown: #5C4033;
-      --brown-light: #8B6914;
       --text: #3A3028;
       --text-light: #6B5E50;
       --white: #FFFFFF;
       --success: #5A8F5A;
-      --success-light: #E8F5E8;
       --shadow: 0 4px 20px rgba(92, 64, 51, 0.12);
       --shadow-lg: 0 8px 40px rgba(92, 64, 51, 0.18);
       --radius: 16px;
@@ -39,7 +74,7 @@
 
     html, body {
       height: 100%;
-      font-family: 'Lato', sans-serif;
+      font-family: 'Lato', -apple-system, sans-serif;
       background: var(--cream);
       color: var(--text);
       overflow: hidden;
@@ -47,7 +82,7 @@
     }
 
     h1, h2, h3, h4 {
-      font-family: 'Playfair Display', serif;
+      font-family: 'Playfair Display', Georgia, serif;
     }
 
     /* ============ SCREENS ============ */
@@ -98,7 +133,7 @@
     }
 
     .start-names {
-      font-family: 'Playfair Display', serif;
+      font-family: 'Playfair Display', Georgia, serif;
       font-size: 36px;
       font-weight: 600;
       color: var(--gold-dark);
@@ -118,6 +153,7 @@
       font-size: 24px;
     }
 
+    /* ============ BUTTONS ============ */
     .btn {
       display: inline-flex;
       align-items: center;
@@ -139,21 +175,9 @@
       box-shadow: 0 4px 20px rgba(201, 168, 76, 0.4);
     }
 
-    .btn-primary:hover, .btn-primary:active {
+    .btn-primary:active {
       transform: translateY(-2px);
       box-shadow: 0 6px 28px rgba(201, 168, 76, 0.5);
-    }
-
-    .btn-secondary {
-      background: var(--white);
-      color: var(--brown);
-      border: 2px solid var(--gold-light);
-      box-shadow: var(--shadow);
-    }
-
-    .btn-secondary:hover, .btn-secondary:active {
-      border-color: var(--gold);
-      background: var(--cream);
     }
 
     .btn-success {
@@ -174,7 +198,8 @@
       align-items: center;
       justify-content: space-between;
       box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-      z-index: 1000;
+      z-index: 10;
+      flex-shrink: 0;
     }
 
     .map-header-title {
@@ -186,7 +211,6 @@
     .map-progress {
       font-size: 15px;
       color: var(--text-light);
-      font-weight: 400;
     }
 
     .map-progress span {
@@ -194,86 +218,174 @@
       font-weight: 700;
     }
 
-    #map {
+    /* Static map container */
+    .map-container {
       flex: 1;
-      z-index: 1;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      position: relative;
+      background: var(--cream-dark);
     }
 
-    /* Custom Leaflet markers */
-    .stop-marker {
+    .map-image-wrapper {
+      position: relative;
+      display: inline-block;
+      min-width: 100%;
+      min-height: 100%;
+    }
+
+    .map-image-wrapper img {
+      display: block;
+      width: 100%;
+      height: auto;
+      min-height: 100%;
+      object-fit: contain;
+    }
+
+    .map-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--text-light);
+      gap: 12px;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .map-placeholder-icon {
+      font-size: 64px;
+      opacity: 0.4;
+    }
+
+    .map-placeholder p {
+      font-size: 18px;
+      max-width: 400px;
+      line-height: 1.6;
+    }
+
+    /* Map markers */
+    .map-marker {
+      position: absolute;
+      transform: translate(-50%, -100%);
+      cursor: pointer;
+      z-index: 5;
+      transition: transform 0.2s;
+    }
+
+    .map-marker:active {
+      transform: translate(-50%, -100%) scale(1.15);
+    }
+
+    .map-marker-pin {
+      width: 40px;
+      height: 52px;
+      position: relative;
+    }
+
+    .map-marker-pin svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 3px 6px rgba(0,0,0,0.3));
+    }
+
+    .map-marker-number {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Lato', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--white);
+    }
+
+    .map-marker-label {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-top: 4px;
+      background: var(--white);
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--brown);
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      pointer-events: none;
+    }
+
+    /* Stop list (shown when no map image) */
+    .stop-list {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 20px;
+    }
+
+    .stop-list-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: all 0.2s;
+      border-left: 4px solid var(--gold);
+    }
+
+    .stop-list-item:active {
+      transform: scale(0.98);
+    }
+
+    .stop-list-item.visited {
+      border-left-color: var(--success);
+    }
+
+    .stop-list-number {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 40px;
-      height: 40px;
-      border-radius: 50% 50% 50% 0;
-      transform: rotate(-45deg);
-      box-shadow: 0 3px 10px rgba(0,0,0,0.25);
-      font-family: 'Lato', sans-serif;
       font-weight: 700;
-      font-size: 16px;
-      border: 3px solid var(--white);
-    }
-
-    .stop-marker span {
-      transform: rotate(45deg);
-    }
-
-    .stop-marker.unvisited {
+      font-size: 18px;
+      color: var(--white);
+      flex-shrink: 0;
       background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
-      color: var(--white);
     }
 
-    .stop-marker.visited {
+    .stop-list-item.visited .stop-list-number {
       background: linear-gradient(135deg, var(--success) 0%, #4A7F4A 100%);
-      color: var(--white);
     }
 
-    /* Marker popup */
-    .marker-popup {
-      text-align: center;
-      min-width: 180px;
+    .stop-list-info {
+      flex: 1;
     }
 
-    .marker-popup h3 {
-      font-size: 16px;
-      color: var(--brown);
-      margin-bottom: 4px;
-    }
-
-    .marker-popup p {
-      font-size: 13px;
-      color: var(--text-light);
-      margin-bottom: 10px;
-    }
-
-    .marker-popup .popup-btn {
-      display: inline-block;
-      padding: 8px 20px;
-      background: var(--gold);
-      color: var(--white);
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      border: none;
-      font-family: 'Lato', sans-serif;
-    }
-
-    .marker-popup .popup-visited {
-      color: var(--success);
-      font-size: 13px;
+    .stop-list-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 18px;
       font-weight: 600;
+      color: var(--brown);
     }
 
-    /* Leaflet popup styling overrides */
-    .leaflet-popup-content-wrapper {
-      border-radius: var(--radius-sm) !important;
-      box-shadow: var(--shadow-lg) !important;
+    .stop-list-desc {
+      font-size: 14px;
+      color: var(--text-light);
+      margin-top: 2px;
     }
 
-    .leaflet-popup-content {
-      margin: 14px 18px !important;
+    .stop-list-arrow {
+      font-size: 20px;
+      color: var(--gold-light);
     }
 
     /* ============ STOP SCREEN ============ */
@@ -290,6 +402,7 @@
       gap: 16px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.08);
       z-index: 10;
+      flex-shrink: 0;
     }
 
     .back-btn {
@@ -312,9 +425,7 @@
       background: var(--cream);
     }
 
-    .stop-header-info {
-      flex: 1;
-    }
+    .stop-header-info { flex: 1; }
 
     .stop-header-number {
       font-size: 13px;
@@ -328,6 +439,31 @@
       font-size: 22px;
       font-weight: 600;
       color: var(--brown);
+    }
+
+    .stop-nav-btn {
+      background: none;
+      border: 2px solid var(--gold-light);
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--brown);
+      font-size: 20px;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+
+    .stop-nav-btn:active {
+      background: var(--cream);
+    }
+
+    .stop-nav-btn:disabled {
+      opacity: 0.3;
+      cursor: default;
     }
 
     .stop-content {
@@ -345,12 +481,10 @@
       font-style: italic;
     }
 
-    /* Video container */
-    .video-section {
-      margin-bottom: 32px;
-    }
+    /* Video */
+    .video-section { margin-bottom: 32px; }
 
-    .video-section-title {
+    .section-label {
       font-size: 14px;
       font-weight: 700;
       color: var(--gold-dark);
@@ -369,22 +503,17 @@
       box-shadow: var(--shadow);
     }
 
-    .video-container iframe,
     .video-container video {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       border: none;
     }
 
     .video-placeholder {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -394,24 +523,10 @@
       gap: 8px;
     }
 
-    .video-placeholder-icon {
-      font-size: 48px;
-      opacity: 0.5;
-    }
+    .video-placeholder-icon { font-size: 48px; opacity: 0.5; }
 
     /* Questions */
-    .questions-section {
-      margin-bottom: 24px;
-    }
-
-    .questions-section-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--gold-dark);
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      margin-bottom: 16px;
-    }
+    .questions-section { margin-bottom: 24px; }
 
     .question-card {
       background: var(--white);
@@ -440,7 +555,7 @@
     }
 
     .question-text {
-      font-family: 'Playfair Display', serif;
+      font-family: 'Playfair Display', Georgia, serif;
       font-size: 20px;
       font-weight: 600;
       color: var(--brown);
@@ -468,9 +583,7 @@
       background: var(--white);
     }
 
-    .answer-input::placeholder {
-      color: #B8AFA3;
-    }
+    .answer-input::placeholder { color: #B8AFA3; }
 
     .save-answer-btn {
       margin-top: 12px;
@@ -483,6 +596,7 @@
       align-items: center;
       gap: 6px;
       margin-top: 12px;
+      margin-left: 12px;
       color: var(--success);
       font-size: 15px;
       font-weight: 600;
@@ -490,25 +604,7 @@
       transition: opacity 0.3s;
     }
 
-    .answer-saved.show {
-      opacity: 1;
-    }
-
-    /* ============ ANIMATIONS ============ */
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .animate-in {
-      animation: fadeInUp 0.6s ease forwards;
-    }
-
-    .delay-1 { animation-delay: 0.1s; }
-    .delay-2 { animation-delay: 0.2s; }
-    .delay-3 { animation-delay: 0.3s; }
-    .delay-4 { animation-delay: 0.4s; }
-    .delay-5 { animation-delay: 0.5s; }
+    .answer-saved.show { opacity: 1; }
 
     /* ============ RESPONSIVE ============ */
     @media (max-width: 768px) {
@@ -526,19 +622,16 @@
       }
     }
 
-    /* Scrollbar styling */
-    .stop-content::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .stop-content::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    .stop-content::-webkit-scrollbar-thumb {
-      background: var(--gold-light);
-      border-radius: 3px;
-    }
+    /* Scrollbar */
+    .stop-content::-webkit-scrollbar,
+    .map-container::-webkit-scrollbar,
+    .stop-list::-webkit-scrollbar { width: 6px; }
+    .stop-content::-webkit-scrollbar-track,
+    .map-container::-webkit-scrollbar-track,
+    .stop-list::-webkit-scrollbar-track { background: transparent; }
+    .stop-content::-webkit-scrollbar-thumb,
+    .map-container::-webkit-scrollbar-thumb,
+    .stop-list::-webkit-scrollbar-thumb { background: var(--gold-light); border-radius: 3px; }
   </style>
 </head>
 <body>
@@ -563,7 +656,9 @@
         <span id="visited-count">0</span> / <span id="total-count">0</span> stops bezocht
       </div>
     </div>
-    <div id="map"></div>
+    <div id="map-area">
+      <!-- Filled dynamically: either map image with markers, or a list -->
+    </div>
   </div>
 
   <!-- ========== STOP SCREEN ========== -->
@@ -574,33 +669,27 @@
         <div class="stop-header-number" id="stop-number"></div>
         <h2 class="stop-header-title" id="stop-title"></h2>
       </div>
+      <button class="stop-nav-btn" id="prev-stop-btn" onclick="navigateStop(-1)">&#8592;</button>
+      <button class="stop-nav-btn" id="next-stop-btn" onclick="navigateStop(1)">&#8594;</button>
     </div>
     <div class="stop-content" id="stop-content">
       <!-- Dynamically filled -->
     </div>
   </div>
 
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-  <!-- Config -->
+  <!-- Config (offline) -->
   <script src="config.js"></script>
 
-  <!-- App Logic -->
+  <!-- App Logic (no external dependencies) -->
   <script>
     // ============ STATE ============
-    let map = null;
-    let markers = [];
     let currentStop = null;
     let visitedStops = new Set();
     let answers = {};
 
     // ============ INIT ============
     function init() {
-      // Load saved state
       loadState();
-
-      // Populate start screen
       const { name1, name2, years } = CONFIG.couple;
       document.getElementById('start-names').textContent = `${name1} & ${name2}`;
       document.getElementById('start-years').innerHTML = `<span>${years}</span> jaar getrouwd`;
@@ -617,9 +706,7 @@
           visitedStops = new Set(state.visited || []);
           answers = state.answers || {};
         }
-      } catch (e) {
-        console.warn('Could not load saved state:', e);
-      }
+      } catch (e) { /* ignore */ }
     }
 
     function saveState() {
@@ -628,9 +715,7 @@
           visited: Array.from(visitedStops),
           answers: answers
         }));
-      } catch (e) {
-        console.warn('Could not save state:', e);
-      }
+      } catch (e) { /* ignore */ }
     }
 
     function updateVisitedCount() {
@@ -644,16 +729,88 @@
     }
 
     function showMap() {
+      renderMap();
       showScreen('map-screen');
-      if (!map) {
-        initMap();
+    }
+
+    // ============ MAP RENDERING ============
+    function renderMap() {
+      const area = document.getElementById('map-area');
+      updateVisitedCount();
+
+      const hasMapImage = CONFIG.mapImage && CONFIG.mapImage.trim() !== '';
+
+      if (hasMapImage) {
+        // Test if the image actually loads before rendering the map view
+        const testImg = new Image();
+        testImg.onload = function() { renderMapWithImage(area); };
+        testImg.onerror = function() { renderStopList(area); };
+        testImg.src = CONFIG.mapImage;
       } else {
-        // Refresh marker styles in case visited status changed
-        updateMarkers();
-        map.invalidateSize();
+        renderStopList(area);
       }
     }
 
+    function renderMapWithImage(container) {
+      let html = '<div class="map-container"><div class="map-image-wrapper">';
+      html += `<img src="${escapeHtml(CONFIG.mapImage)}" alt="Routekaart">`;
+
+      // Add markers
+      CONFIG.stops.forEach(stop => {
+        const isVisited = visitedStops.has(stop.id);
+        const fillColor = isVisited ? '#5A8F5A' : '#C9A84C';
+        const darkColor = isVisited ? '#4A7F4A' : '#A07D2E';
+
+        html += `<div class="map-marker" style="left: ${stop.markerX}%; top: ${stop.markerY}%;"
+                  onclick="showStop(${stop.id})">
+                  <div class="map-marker-pin">
+                    <svg viewBox="0 0 40 52" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M20 0C9 0 0 9 0 20c0 15 20 32 20 32s20-17 20-32C40 9 31 0 20 0z"
+                        fill="${fillColor}"/>
+                      <path d="M20 0C9 0 0 9 0 20c0 15 20 32 20 32s20-17 20-32C40 9 31 0 20 0z"
+                        fill="none" stroke="${darkColor}" stroke-width="1.5"/>
+                      <circle cx="20" cy="18" r="12" fill="${darkColor}" opacity="0.2"/>
+                    </svg>
+                    <span class="map-marker-number">${stop.id}</span>
+                  </div>
+                  <div class="map-marker-label">${escapeHtml(stop.title)}</div>
+                </div>`;
+      });
+
+      html += '</div></div>';
+      container.innerHTML = html;
+      container.className = '';
+      container.style.cssText = 'flex:1; overflow:hidden; display:flex; flex-direction:column;';
+    }
+
+    function renderStopList(container) {
+      let html = '<div class="stop-list">';
+
+      // Show a friendly message about the map
+      html += `<div style="text-align:center; padding: 16px 20px 8px; color: var(--text-light); font-size: 15px;">
+                Kies een stop om te beginnen
+              </div>`;
+
+      CONFIG.stops.forEach(stop => {
+        const isVisited = visitedStops.has(stop.id);
+        html += `<div class="stop-list-item ${isVisited ? 'visited' : ''}"
+                  onclick="showStop(${stop.id})">
+                  <div class="stop-list-number">${stop.id}</div>
+                  <div class="stop-list-info">
+                    <div class="stop-list-title">${escapeHtml(stop.title)}</div>
+                    <div class="stop-list-desc">${escapeHtml(stop.description)}</div>
+                  </div>
+                  <div class="stop-list-arrow">${isVisited ? '&#10003;' : '&#10148;'}</div>
+                </div>`;
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+      container.className = '';
+      container.style.cssText = 'flex:1; overflow:hidden; display:flex; flex-direction:column;';
+    }
+
+    // ============ STOP ============
     function showStop(stopId) {
       const stop = CONFIG.stops.find(s => s.id === stopId);
       if (!stop) return;
@@ -663,35 +820,34 @@
       saveState();
       updateVisitedCount();
 
-      // Fill header
+      // Header
       document.getElementById('stop-number').textContent = `Stop ${stop.id} van ${CONFIG.stops.length}`;
       document.getElementById('stop-title').textContent = stop.title;
 
-      // Build content
+      // Nav buttons
+      const stopIndex = CONFIG.stops.findIndex(s => s.id === stopId);
+      document.getElementById('prev-stop-btn').disabled = stopIndex <= 0;
+      document.getElementById('next-stop-btn').disabled = stopIndex >= CONFIG.stops.length - 1;
+
+      // Content
       const content = document.getElementById('stop-content');
       content.scrollTop = 0;
 
       let html = '';
 
       // Description
-      html += `<p class="stop-description animate-in">${escapeHtml(stop.description)}</p>`;
+      html += `<p class="stop-description">${escapeHtml(stop.description)}</p>`;
 
       // Video
-      html += `<div class="video-section animate-in delay-1">`;
-      html += `<div class="video-section-title">Bekijk de video</div>`;
+      html += `<div class="video-section">`;
+      html += `<div class="section-label">Bekijk de video</div>`;
       html += `<div class="video-container">`;
 
-      if (stop.video && stop.video.url) {
-        if (stop.video.type === 'youtube') {
-          html += `<iframe src="https://www.youtube.com/embed/${stop.video.url}?rel=0&playsinline=1"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowfullscreen></iframe>`;
-        } else if (stop.video.type === 'mp4') {
-          html += `<video controls playsinline>
-                    <source src="${stop.video.url}" type="video/mp4">
-                    Je browser ondersteunt geen video.
-                  </video>`;
-        }
+      if (stop.video && stop.video.trim() !== '') {
+        html += `<video controls playsinline>
+                  <source src="${escapeHtml(stop.video)}" type="video/mp4">
+                  Je browser ondersteunt geen video.
+                </video>`;
       } else {
         html += `<div class="video-placeholder">
                   <div class="video-placeholder-icon">&#127916;</div>
@@ -703,28 +859,26 @@
 
       // Questions
       if (stop.questions && stop.questions.length > 0) {
-        html += `<div class="questions-section animate-in delay-2">`;
-        html += `<div class="questions-section-title">Beantwoord de ${stop.questions.length === 1 ? 'vraag' : 'vragen'}</div>`;
+        html += `<div class="questions-section">`;
+        html += `<div class="section-label">Beantwoord de ${stop.questions.length === 1 ? 'vraag' : 'vragen'}</div>`;
 
         stop.questions.forEach((q, idx) => {
           const answerKey = `${stop.id}-${idx}`;
           const savedAnswer = answers[answerKey] || '';
           const isAnswered = savedAnswer.trim().length > 0;
 
-          html += `<div class="question-card ${isAnswered ? 'answered' : ''}" id="qcard-${answerKey}">`;
-          html += `<div class="question-number">${stop.questions.length > 1 ? `Vraag ${idx + 1}` : 'De vraag'}</div>`;
-          html += `<div class="question-text">${escapeHtml(q.text)}</div>`;
-          html += `<textarea class="answer-input"
-                    id="answer-${answerKey}"
-                    placeholder="Typ jullie antwoord hier..."
-                    rows="2">${escapeHtml(savedAnswer)}</textarea>`;
-          html += `<div style="display: flex; align-items: center; gap: 12px;">`;
-          html += `<button class="btn btn-success save-answer-btn" onclick="saveAnswer('${answerKey}')">
-                    Bewaar antwoord
-                  </button>`;
-          html += `<span class="answer-saved" id="saved-${answerKey}">&#10003; Opgeslagen!</span>`;
-          html += `</div>`;
-          html += `</div>`;
+          html += `<div class="question-card ${isAnswered ? 'answered' : ''}" id="qcard-${answerKey}">
+                    <div class="question-number">${stop.questions.length > 1 ? `Vraag ${idx + 1}` : 'De vraag'}</div>
+                    <div class="question-text">${escapeHtml(q.text)}</div>
+                    <textarea class="answer-input" id="answer-${answerKey}"
+                      placeholder="Typ jullie antwoord hier..." rows="2">${escapeHtml(savedAnswer)}</textarea>
+                    <div style="display: flex; align-items: center;">
+                      <button class="btn btn-success save-answer-btn" onclick="saveAnswer('${answerKey}')">
+                        Bewaar antwoord
+                      </button>
+                      <span class="answer-saved" id="saved-${answerKey}">&#10003; Opgeslagen!</span>
+                    </div>
+                  </div>`;
         });
 
         html += `</div>`;
@@ -732,9 +886,15 @@
 
       content.innerHTML = html;
       showScreen('stop-screen');
+    }
 
-      // Update markers on map
-      updateMarkers();
+    function navigateStop(direction) {
+      if (!currentStop) return;
+      const idx = CONFIG.stops.findIndex(s => s.id === currentStop.id);
+      const newIdx = idx + direction;
+      if (newIdx >= 0 && newIdx < CONFIG.stops.length) {
+        showStop(CONFIG.stops[newIdx].id);
+      }
     }
 
     // ============ ANSWERS ============
@@ -745,113 +905,16 @@
       answers[answerKey] = input.value;
       saveState();
 
-      // Update card style
       const card = document.getElementById(`qcard-${answerKey}`);
-      if (card && input.value.trim()) {
-        card.classList.add('answered');
-      } else if (card) {
-        card.classList.remove('answered');
+      if (card) {
+        card.classList.toggle('answered', input.value.trim().length > 0);
       }
 
-      // Show saved indicator
       const savedEl = document.getElementById(`saved-${answerKey}`);
       if (savedEl) {
         savedEl.classList.add('show');
         setTimeout(() => savedEl.classList.remove('show'), 2000);
       }
-    }
-
-    // ============ MAP ============
-    function initMap() {
-      map = L.map('map', {
-        zoomControl: true,
-        attributionControl: false
-      }).setView(CONFIG.mapCenter, CONFIG.mapZoom);
-
-      // Tile layer - warm/vintage style
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19
-      }).addTo(map);
-
-      // Add attribution in corner
-      L.control.attribution({ position: 'bottomright' })
-        .addAttribution('&copy; OpenStreetMap')
-        .addTo(map);
-
-      // Draw route line
-      const routePoints = CONFIG.route.length > 0
-        ? CONFIG.route
-        : CONFIG.stops.map(s => [s.lat, s.lng]);
-
-      L.polyline(routePoints, {
-        color: '#C9A84C',
-        weight: 4,
-        opacity: 0.6,
-        dashArray: '10, 10',
-        lineJoin: 'round'
-      }).addTo(map);
-
-      // Add markers
-      CONFIG.stops.forEach(stop => {
-        const isVisited = visitedStops.has(stop.id);
-        const marker = createMarker(stop, isVisited);
-        markers.push({ id: stop.id, marker });
-      });
-
-      // Fit map to show all stops
-      if (CONFIG.stops.length > 0) {
-        const bounds = L.latLngBounds(CONFIG.stops.map(s => [s.lat, s.lng]));
-        map.fitBounds(bounds, { padding: [50, 50] });
-      }
-    }
-
-    function createMarker(stop, isVisited) {
-      const markerHtml = `<div class="stop-marker ${isVisited ? 'visited' : 'unvisited'}">
-                            <span>${stop.id}</span>
-                          </div>`;
-
-      const icon = L.divIcon({
-        html: markerHtml,
-        className: '',
-        iconSize: [40, 40],
-        iconAnchor: [20, 40],
-        popupAnchor: [0, -42]
-      });
-
-      const marker = L.marker([stop.lat, stop.lng], { icon }).addTo(map);
-
-      // Popup content
-      const visitedLabel = isVisited
-        ? `<div class="popup-visited">&#10003; Bezocht</div>`
-        : '';
-
-      const popupHtml = `<div class="marker-popup">
-                          <h3>${escapeHtml(stop.title)}</h3>
-                          <p>${escapeHtml(stop.description)}</p>
-                          ${visitedLabel}
-                          <button class="popup-btn" onclick="showStop(${stop.id})">
-                            ${isVisited ? 'Opnieuw bekijken' : 'Open deze stop'}
-                          </button>
-                        </div>`;
-
-      marker.bindPopup(popupHtml);
-
-      return marker;
-    }
-
-    function updateMarkers() {
-      if (!map) return;
-
-      // Remove existing markers
-      markers.forEach(m => map.removeLayer(m.marker));
-      markers = [];
-
-      // Re-create markers with updated visited status
-      CONFIG.stops.forEach(stop => {
-        const isVisited = visitedStops.has(stop.id);
-        const marker = createMarker(stop, isVisited);
-        markers.push({ id: stop.id, marker });
-      });
     }
 
     // ============ UTILS ============

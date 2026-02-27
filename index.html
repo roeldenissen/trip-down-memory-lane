@@ -254,7 +254,11 @@
     /* Completed stop */
     .stop-list-item.completed {
       border-left-color: var(--success);
-      opacity: 0.75;
+      cursor: pointer;
+    }
+
+    .stop-list-item.completed:active {
+      transform: scale(0.98);
     }
 
     .stop-list-item.completed .stop-list-number {
@@ -388,6 +392,26 @@
       box-shadow: 0 2px 10px rgba(0,0,0,0.08);
       z-index: 10;
       flex-shrink: 0;
+    }
+
+    .back-btn {
+      background: none;
+      border: 2px solid var(--gold-light);
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--brown);
+      font-size: 20px;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+
+    .back-btn:active {
+      background: var(--cream);
     }
 
     .stop-header-info { flex: 1; }
@@ -777,6 +801,7 @@
   <!-- ========== STOP SCREEN ========== -->
   <div id="stop-screen" class="screen">
     <div class="stop-header">
+      <button class="back-btn" id="back-btn" onclick="showStopList()" style="display:none;">&#8592;</button>
       <div class="stop-header-info">
         <div class="stop-header-number" id="stop-number"></div>
         <h2 class="stop-header-title" id="stop-title"></h2>
@@ -934,7 +959,8 @@
       CONFIG.stops.forEach((stop, index) => {
         const status = getStopStatus(stop, index);
 
-        html += `<div class="stop-list-item ${status}">`;
+        const clickable = status === 'completed' ? ` onclick="showStop(${stop.id}, true)"` : '';
+        html += `<div class="stop-list-item ${status}"${clickable}>`;
         html += `<div class="stop-list-number">${stop.id}</div>`;
         html += `<div class="stop-list-info">`;
         html += `<div class="stop-list-title">${escapeHtml(stop.title)}</div>`;
@@ -963,15 +989,19 @@
     }
 
     // ============ STOP ============
-    function showStop(stopId) {
+    function showStop(stopId, reviewMode) {
       const stop = CONFIG.stops.find(s => s.id === stopId);
       if (!stop) return;
 
       currentStop = stop;
-      answersChecked = false;
+      answersChecked = reviewMode ? true : false;
 
       document.getElementById('stop-number').textContent = `Stop ${stop.id} van ${CONFIG.stops.length}`;
       document.getElementById('stop-title').textContent = stop.title;
+
+      // Show/hide back button (always visible in review mode, hidden during active stop)
+      const backBtn = document.getElementById('back-btn');
+      backBtn.style.display = reviewMode ? 'flex' : 'none';
 
       const content = document.getElementById('stop-content');
       content.scrollTop = 0;
@@ -1001,31 +1031,75 @@
       // Questions
       if (stop.questions && stop.questions.length > 0) {
         html += `<div class="questions-section">`;
-        html += `<div class="section-label">Beantwoord de ${stop.questions.length === 1 ? 'vraag' : 'vragen'}</div>`;
+
+        if (reviewMode) {
+          const stopScore = scores[stop.id];
+          const scoreText = stopScore ? `${stopScore.correct} / ${stopScore.total} goed` : '';
+          html += `<div class="section-label">Jullie antwoorden ${scoreText ? '— ' + scoreText : ''}</div>`;
+        } else {
+          html += `<div class="section-label">Beantwoord de ${stop.questions.length === 1 ? 'vraag' : 'vragen'}</div>`;
+        }
 
         stop.questions.forEach((q, idx) => {
           const answerKey = `${stop.id}-${idx}`;
           const savedAnswer = answers[answerKey] || '';
 
-          html += `<div class="question-card" id="qcard-${answerKey}">
-                    <div class="question-number">${stop.questions.length > 1 ? `Vraag ${idx + 1}` : 'De vraag'}</div>
-                    <div class="question-text">${escapeHtml(q.text)}</div>
-                    <textarea class="answer-input" id="answer-${answerKey}"
-                      placeholder="Typ jullie antwoord hier..." rows="2">${escapeHtml(savedAnswer)}</textarea>
-                    <div class="answer-feedback" id="feedback-${answerKey}"></div>
-                  </div>`;
+          if (reviewMode) {
+            // Review mode: show answered questions with feedback
+            const isCorrect = checkAnswer(savedAnswer, q.answer);
+            const cardClass = isCorrect ? 'correct' : 'wrong';
+            const inputClass = isCorrect ? 'correct' : 'wrong';
+
+            html += `<div class="question-card ${cardClass}">
+                      <div class="question-number">${stop.questions.length > 1 ? `Vraag ${idx + 1}` : 'De vraag'}</div>
+                      <div class="question-text">${escapeHtml(q.text)}</div>
+                      <textarea class="answer-input ${inputClass}" disabled rows="2">${escapeHtml(savedAnswer)}</textarea>
+                      <div class="answer-feedback ${cardClass} show">`;
+
+            if (isCorrect) {
+              html += `<span class="answer-feedback-icon">&#10003;</span> Goed zo!`;
+              if (q.hint && q.hint.trim()) {
+                html += `<span class="hint-text">${escapeHtml(q.hint)}</span>`;
+              }
+            } else {
+              html += `<span class="answer-feedback-icon">&#10007;</span> Helaas!`;
+              html += `<span class="correct-answer">Het juiste antwoord: ${escapeHtml(q.answer)}</span>`;
+              if (q.hint && q.hint.trim()) {
+                html += `<span class="hint-text">${escapeHtml(q.hint)}</span>`;
+              }
+            }
+
+            html += `</div></div>`;
+          } else {
+            // Active mode: editable inputs
+            html += `<div class="question-card" id="qcard-${answerKey}">
+                      <div class="question-number">${stop.questions.length > 1 ? `Vraag ${idx + 1}` : 'De vraag'}</div>
+                      <div class="question-text">${escapeHtml(q.text)}</div>
+                      <textarea class="answer-input" id="answer-${answerKey}"
+                        placeholder="Typ jullie antwoord hier..." rows="2">${escapeHtml(savedAnswer)}</textarea>
+                      <div class="answer-feedback" id="feedback-${answerKey}"></div>
+                    </div>`;
+          }
         });
 
         html += `</div>`;
       }
 
-      // Submit button
-      html += `<div class="submit-section">
-                <button class="btn btn-success" id="submit-btn" onclick="submitAnswers()">
-                  Antwoord indienen &#10148;
-                </button>
-                <div class="submit-hint" id="submit-hint">Vul eerst alle vragen in</div>
-              </div>`;
+      // Bottom section
+      if (reviewMode) {
+        html += `<div class="submit-section">
+                  <button class="btn btn-primary" onclick="showStopList()">
+                    &#8592; Terug naar de route
+                  </button>
+                </div>`;
+      } else {
+        html += `<div class="submit-section">
+                  <button class="btn btn-success" id="submit-btn" onclick="submitAnswers()">
+                    Antwoord indienen &#10148;
+                  </button>
+                  <div class="submit-hint" id="submit-hint">Vul eerst alle vragen in</div>
+                </div>`;
+      }
 
       content.innerHTML = html;
       showScreen('stop-screen');

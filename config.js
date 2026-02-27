@@ -3,16 +3,42 @@
  *  TRIP DOWN MEMORY LANE - Configuratie
  * ============================================
  *
- *  Pas dit bestand aan om stops, video's en vragen toe te voegen.
+ *  HOE VUL JE DIT IN?
+ *  ==================
  *
- *  VIDEO:
- *    Zet MP4 bestanden in de assets/ map en verwijs ernaar met het pad,
- *    bijv. "assets/stop1.mp4"
- *    Laat leeg ("") als de video nog niet klaar is.
+ *  1. STOPS: Pas de stops hieronder aan. Je kunt er zoveel toevoegen
+ *     als je wilt. Kopieer een volledig stop-blok en pas de gegevens aan.
+ *     Zorg dat de 'id' nummers oplopen (1, 2, 3, ...).
  *
- *  VRAGEN:
- *    Elke stop kan meerdere vragen hebben.
- *    Alle vragen moeten beantwoord zijn om door te gaan naar de volgende stop.
+ *  2. VIDEO'S: Zet MP4 bestanden in de map assets/videos/
+ *     en verwijs ernaar met het pad, bijv. "assets/videos/stop1.mp4"
+ *     Laat leeg ("") als de video nog niet klaar is.
+ *
+ *  3. VRAGEN: Elke stop kan meerdere vragen hebben.
+ *     Per vraag geef je op:
+ *       - text:   de vraagtekst
+ *       - answer: het juiste antwoord
+ *       - hint:   (optioneel) een hint die getoond wordt bij het antwoord,
+ *                 bijv. "Het was in de zomer van dat jaar!"
+ *
+ *     Het antwoord wordt NIET hoofdlettergevoelig vergeleken,
+ *     en kleine typfouten worden door de vingers gezien.
+ *
+ *  VOORBEELD STOP:
+ *  {
+ *    id: 1,
+ *    title: "De naam van de stop",
+ *    address: "Straatnaam 12, Plaatsnaam",
+ *    description: "Een korte beschrijving voor als ze aankomen.",
+ *    video: "assets/videos/stop1.mp4",
+ *    questions: [
+ *      {
+ *        text: "In welk jaar was dit?",
+ *        answer: "1985",
+ *        hint: "Het was het jaar dat Live Aid plaatsvond!"
+ *      }
+ *    ]
+ *  }
  */
 
 const CONFIG = {
@@ -30,9 +56,13 @@ const CONFIG = {
       title: "Waar het allemaal begon",
       address: "Adres stop 1, Tilburg",
       description: "De plek waar Wilma en Kees elkaar voor het eerst ontmoetten.",
-      video: "",     // bijv. "assets/stop1.mp4"
+      video: "",  // bijv. "assets/videos/stop1.mp4"
       questions: [
-        { text: "In welk jaar ontmoetten jullie elkaar voor het eerst?" }
+        {
+          text: "In welk jaar ontmoetten jullie elkaar voor het eerst?",
+          answer: "1983",
+          hint: "Jullie kennen elkaar al langer dan je denkt!"
+        }
       ]
     },
     {
@@ -42,7 +72,11 @@ const CONFIG = {
       description: "Hier hadden Wilma en Kees hun allereerste date.",
       video: "",
       questions: [
-        { text: "Wat deden jullie op jullie eerste afspraakje?" }
+        {
+          text: "Wat deden jullie op jullie eerste afspraakje?",
+          answer: "Bioscoopje",
+          hint: ""
+        }
       ]
     },
     {
@@ -52,8 +86,16 @@ const CONFIG = {
       description: "Op deze bijzondere plek werd de grote vraag gesteld.",
       video: "",
       questions: [
-        { text: "Hoe ging het aanzoek precies?" },
-        { text: "Was het een verrassing of hadden jullie het al besproken?" }
+        {
+          text: "In welk jaar zijn jullie verloofd?",
+          answer: "1984",
+          hint: ""
+        },
+        {
+          text: "Was het een verrassing?",
+          answer: "Ja",
+          hint: ""
+        }
       ]
     },
     {
@@ -63,7 +105,11 @@ const CONFIG = {
       description: "Hier gaven Wilma en Kees elkaar het ja-woord.",
       video: "",
       questions: [
-        { text: "Wat was het mooiste moment van de trouwdag?" }
+        {
+          text: "Wat was het mooiste moment van de trouwdag?",
+          answer: "Het ja-woord",
+          hint: ""
+        }
       ]
     },
     {
@@ -73,7 +119,11 @@ const CONFIG = {
       description: "Het eerste eigen stekje van het kersverse echtpaar.",
       video: "",
       questions: [
-        { text: "Wat was het eerste dat jullie kochten voor het nieuwe huis?" }
+        {
+          text: "Wat was het eerste dat jullie kochten voor het nieuwe huis?",
+          answer: "Een bank",
+          hint: ""
+        }
       ]
     },
     {
@@ -83,7 +133,11 @@ const CONFIG = {
       description: "Een plek die verbonden is aan een onvergetelijk moment.",
       video: "",
       questions: [
-        { text: "Welke herinnering komt als eerste boven bij deze plek?" }
+        {
+          text: "Welke herinnering komt als eerste boven bij deze plek?",
+          answer: "De zomer van 1990",
+          hint: ""
+        }
       ]
     },
     {
@@ -93,7 +147,11 @@ const CONFIG = {
       description: "Hier kwamen Wilma en Kees graag samen.",
       video: "",
       questions: [
-        { text: "Hoe vaak kwamen jullie hier vroeger?" }
+        {
+          text: "Hoe vaak kwamen jullie hier vroeger?",
+          answer: "Elke week",
+          hint: ""
+        }
       ]
     },
     {
@@ -103,7 +161,11 @@ const CONFIG = {
       description: "Een plek die alles te maken heeft met het gezin.",
       video: "",
       questions: [
-        { text: "Wat is jullie mooiste gezinsherinnering op deze plek?" }
+        {
+          text: "Wat is jullie mooiste gezinsherinnering op deze plek?",
+          answer: "De eerste schooldag",
+          hint: ""
+        }
       ]
     },
     {
@@ -113,7 +175,11 @@ const CONFIG = {
       description: "Een plek die staat voor de latere jaren samen.",
       video: "",
       questions: [
-        { text: "Wat maakt jullie het meest trots als jullie terugkijken?" }
+        {
+          text: "Wat maakt jullie het meest trots als jullie terugkijken?",
+          answer: "De kinderen",
+          hint: ""
+        }
       ]
     },
     {
@@ -123,7 +189,11 @@ const CONFIG = {
       description: "Het eindpunt van de tocht. 40 jaar samen, en het avontuur gaat door!",
       video: "",
       questions: [
-        { text: "Wat wensen jullie elkaar toe voor de komende 40 jaar?" }
+        {
+          text: "Wat wensen jullie elkaar toe voor de komende 40 jaar?",
+          answer: "Gezondheid en geluk",
+          hint: ""
+        }
       ]
     }
   ]

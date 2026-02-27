@@ -531,7 +531,72 @@
       border-color: #D9534F;
     }
 
+    .answer-input.correct {
+      border-color: var(--success);
+      background: #f0f8f0;
+    }
+
+    .answer-input.wrong {
+      border-color: #D9534F;
+      background: #fdf0f0;
+    }
+
+    .answer-input:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
     .answer-input::placeholder { color: #B8AFA3; }
+
+    /* Answer feedback */
+    .answer-feedback {
+      margin-top: 12px;
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      line-height: 1.5;
+      display: none;
+    }
+
+    .answer-feedback.show { display: block; }
+
+    .answer-feedback.correct {
+      background: #e8f5e8;
+      color: #2d6a2d;
+      border: 1px solid #c3e6c3;
+    }
+
+    .answer-feedback.wrong {
+      background: #fde8e8;
+      color: #8b2d2d;
+      border: 1px solid #f0c3c3;
+    }
+
+    .answer-feedback-icon {
+      font-weight: 700;
+      margin-right: 6px;
+    }
+
+    .answer-feedback .correct-answer {
+      display: block;
+      margin-top: 6px;
+      font-weight: 700;
+    }
+
+    .answer-feedback .hint-text {
+      display: block;
+      margin-top: 4px;
+      font-style: italic;
+      opacity: 0.85;
+    }
+
+    .question-card.correct {
+      border-left-color: var(--success);
+    }
+
+    .question-card.wrong {
+      border-left-color: #D9534F;
+    }
 
     /* Submit section */
     .submit-section {
@@ -548,6 +613,15 @@
     }
 
     .submit-hint.show { opacity: 1; }
+
+    /* Score display in success overlay */
+    .success-score {
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--gold-dark);
+      font-family: 'Playfair Display', Georgia, serif;
+      margin-bottom: 8px;
+    }
 
     /* ============ SUCCESS OVERLAY ============ */
     .success-overlay {
@@ -726,7 +800,8 @@
   <!-- ========== SUCCESS OVERLAY ========== -->
   <div class="success-overlay" id="success-overlay">
     <div class="success-card">
-      <div class="success-icon">&#10003;</div>
+      <div class="success-icon" id="success-icon">&#10003;</div>
+      <div class="success-score" id="success-score"></div>
       <h3 class="success-title" id="success-title">Goed gedaan!</h3>
       <p class="success-text" id="success-text">Op naar de volgende stop...</p>
       <button class="btn btn-primary" id="success-btn" onclick="closeSuccessAndContinue()">
@@ -744,6 +819,8 @@
     let currentStop = null;
     let completedStops = new Set();
     let answers = {};
+    let scores = {};        // stopId -> { correct: N, total: N }
+    let answersChecked = false; // prevents double-submit
 
     // ============ INIT ============
     function init() {
@@ -765,6 +842,7 @@
           const state = JSON.parse(saved);
           completedStops = new Set(state.completed || []);
           answers = state.answers || {};
+          scores = state.scores || {};
         }
       } catch (e) { /* ignore */ }
     }
@@ -773,13 +851,59 @@
       try {
         localStorage.setItem('trip-memory-lane-state', JSON.stringify({
           completed: Array.from(completedStops),
-          answers: answers
+          answers: answers,
+          scores: scores
         }));
       } catch (e) { /* ignore */ }
     }
 
     function updateCompletedCount() {
       document.getElementById('completed-count').textContent = completedStops.size;
+    }
+
+    // ============ ANSWER CHECKING ============
+    // Normalize text: lowercase, trim, remove punctuation
+    function normalize(str) {
+      return (str || '').toLowerCase().trim()
+        .replace(/[.,!?;:'"()\-]/g, '')
+        .replace(/\s+/g, ' ');
+    }
+
+    // Levenshtein distance for fuzzy matching
+    function levenshtein(a, b) {
+      const m = a.length, n = b.length;
+      const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+      for (let i = 0; i <= m; i++) dp[i][0] = i;
+      for (let j = 0; j <= n; j++) dp[0][j] = j;
+      for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+          dp[i][j] = Math.min(
+            dp[i - 1][j] + 1,
+            dp[i][j - 1] + 1,
+            dp[i - 1][j - 1] + (a[i - 1] !== b[j - 1] ? 1 : 0)
+          );
+        }
+      }
+      return dp[m][n];
+    }
+
+    // Check if the given answer matches the correct answer
+    // Allows small typos based on answer length
+    function checkAnswer(given, correct) {
+      const g = normalize(given);
+      const c = normalize(correct);
+
+      // Exact match after normalization
+      if (g === c) return true;
+
+      // Check if one contains the other (for partial answers)
+      if (c.length > 3 && (g.includes(c) || c.includes(g))) return true;
+
+      // Fuzzy match: allow typos proportional to length
+      const maxDist = c.length <= 4 ? 0 : c.length <= 8 ? 1 : 2;
+      if (levenshtein(g, c) <= maxDist) return true;
+
+      return false;
     }
 
     // ============ NAVIGATION ============
@@ -796,7 +920,6 @@
 
     function getStopStatus(stop, index) {
       if (completedStops.has(stop.id)) return 'completed';
-      // Current = first non-completed stop
       const firstUncompletedIdx = CONFIG.stops.findIndex(s => !completedStops.has(s.id));
       if (index === firstUncompletedIdx) return 'current';
       return 'locked';
@@ -812,17 +935,11 @@
         const status = getStopStatus(stop, index);
 
         html += `<div class="stop-list-item ${status}">`;
-
-        // Number badge
         html += `<div class="stop-list-number">${stop.id}</div>`;
-
-        // Info
         html += `<div class="stop-list-info">`;
         html += `<div class="stop-list-title">${escapeHtml(stop.title)}</div>`;
         html += `<div class="stop-list-address">${escapeHtml(stop.address)}</div>`;
         html += `</div>`;
-
-        // Action area
         html += `<div class="stop-list-action">`;
         if (status === 'completed') {
           html += `<div class="stop-list-check">&#10003;</div>`;
@@ -832,13 +949,11 @@
           html += `<div class="stop-list-lock">&#128274;</div>`;
         }
         html += `</div>`;
-
         html += `</div>`;
       });
 
       container.innerHTML = html;
 
-      // Scroll the current stop into view
       setTimeout(() => {
         const currentItem = container.querySelector('.stop-list-item.current');
         if (currentItem) {
@@ -853,12 +968,11 @@
       if (!stop) return;
 
       currentStop = stop;
+      answersChecked = false;
 
-      // Header
       document.getElementById('stop-number').textContent = `Stop ${stop.id} van ${CONFIG.stops.length}`;
       document.getElementById('stop-title').textContent = stop.title;
 
-      // Content
       const content = document.getElementById('stop-content');
       content.scrollTop = 0;
 
@@ -871,7 +985,6 @@
       html += `<div class="video-section">`;
       html += `<div class="section-label">Bekijk de video</div>`;
       html += `<div class="video-container">`;
-
       if (stop.video && stop.video.trim() !== '') {
         html += `<video controls playsinline>
                   <source src="${escapeHtml(stop.video)}" type="video/mp4">
@@ -883,7 +996,6 @@
                   <div>Video wordt later toegevoegd</div>
                 </div>`;
       }
-
       html += `</div></div>`;
 
       // Questions
@@ -900,6 +1012,7 @@
                     <div class="question-text">${escapeHtml(q.text)}</div>
                     <textarea class="answer-input" id="answer-${answerKey}"
                       placeholder="Typ jullie antwoord hier..." rows="2">${escapeHtml(savedAnswer)}</textarea>
+                    <div class="answer-feedback" id="feedback-${answerKey}"></div>
                   </div>`;
         });
 
@@ -908,7 +1021,7 @@
 
       // Submit button
       html += `<div class="submit-section">
-                <button class="btn btn-success" onclick="submitAnswers()">
+                <button class="btn btn-success" id="submit-btn" onclick="submitAnswers()">
                   Antwoord indienen &#10148;
                 </button>
                 <div class="submit-hint" id="submit-hint">Vul eerst alle vragen in</div>
@@ -920,42 +1033,34 @@
 
     // ============ SUBMIT ============
     function submitAnswers() {
-      if (!currentStop) return;
+      if (!currentStop || answersChecked) return;
 
       let allFilled = true;
       const stop = currentStop;
 
-      // Save all answers and check if all filled
+      // First pass: check all fields are filled
       stop.questions.forEach((q, idx) => {
         const answerKey = `${stop.id}-${idx}`;
         const input = document.getElementById(`answer-${answerKey}`);
         const card = document.getElementById(`qcard-${answerKey}`);
 
-        if (input) {
-          answers[answerKey] = input.value;
-
-          if (input.value.trim() === '') {
-            allFilled = false;
-            // Show error state
-            card.classList.add('error');
-            input.classList.add('error');
-            // Remove error after animation
-            setTimeout(() => {
-              card.classList.remove('error');
-              input.classList.remove('error');
-            }, 600);
-          }
+        if (input && input.value.trim() === '') {
+          allFilled = false;
+          card.classList.add('error');
+          input.classList.add('error');
+          setTimeout(() => {
+            card.classList.remove('error');
+            input.classList.remove('error');
+          }, 600);
         }
       });
 
       if (!allFilled) {
-        // Show hint
         const hint = document.getElementById('submit-hint');
         if (hint) {
           hint.classList.add('show');
           setTimeout(() => hint.classList.remove('show'), 3000);
         }
-        // Scroll to first empty question
         const firstEmpty = stop.questions.findIndex((q, idx) => {
           const input = document.getElementById(`answer-${stop.id}-${idx}`);
           return input && input.value.trim() === '';
@@ -967,26 +1072,105 @@
         return;
       }
 
-      // All answered - mark as completed
+      // All filled - now check answers
+      answersChecked = true;
+      let correctCount = 0;
+      const totalQuestions = stop.questions.length;
+
+      stop.questions.forEach((q, idx) => {
+        const answerKey = `${stop.id}-${idx}`;
+        const input = document.getElementById(`answer-${answerKey}`);
+        const card = document.getElementById(`qcard-${answerKey}`);
+        const feedback = document.getElementById(`feedback-${answerKey}`);
+
+        if (!input || !card || !feedback) return;
+
+        // Save the answer
+        answers[answerKey] = input.value;
+
+        // Disable input
+        input.disabled = true;
+
+        // Check correctness
+        const isCorrect = checkAnswer(input.value, q.answer);
+        if (isCorrect) correctCount++;
+
+        // Show feedback
+        card.classList.add(isCorrect ? 'correct' : 'wrong');
+        input.classList.add(isCorrect ? 'correct' : 'wrong');
+
+        let feedbackHtml = '';
+        if (isCorrect) {
+          feedbackHtml = `<span class="answer-feedback-icon">&#10003;</span> Goed zo!`;
+          if (q.hint && q.hint.trim()) {
+            feedbackHtml += `<span class="hint-text">${escapeHtml(q.hint)}</span>`;
+          }
+          feedback.className = 'answer-feedback correct show';
+        } else {
+          feedbackHtml = `<span class="answer-feedback-icon">&#10007;</span> Helaas!`;
+          feedbackHtml += `<span class="correct-answer">Het juiste antwoord: ${escapeHtml(q.answer)}</span>`;
+          if (q.hint && q.hint.trim()) {
+            feedbackHtml += `<span class="hint-text">${escapeHtml(q.hint)}</span>`;
+          }
+          feedback.className = 'answer-feedback wrong show';
+        }
+        feedback.innerHTML = feedbackHtml;
+      });
+
+      // Save score
+      scores[stop.id] = { correct: correctCount, total: totalQuestions };
+
+      // Mark as completed
       completedStops.add(stop.id);
       saveState();
 
-      // Show success overlay
+      // Change submit button to "Ga verder"
+      const submitBtn = document.getElementById('submit-btn');
+      submitBtn.innerHTML = 'Ga verder &#10148;';
+      submitBtn.className = 'btn btn-primary';
+      submitBtn.onclick = function() { showSuccessOverlay(stop, correctCount, totalQuestions); };
+
+      // Scroll to first question to see feedback
+      const firstCard = document.getElementById(`qcard-${stop.id}-0`);
+      if (firstCard) firstCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function showSuccessOverlay(stop, correctCount, totalQuestions) {
       const isLastStop = completedStops.size >= CONFIG.stops.length;
       const overlay = document.getElementById('success-overlay');
+      const successIcon = document.getElementById('success-icon');
+      const successScore = document.getElementById('success-score');
       const successTitle = document.getElementById('success-title');
       const successText = document.getElementById('success-text');
       const successBtn = document.getElementById('success-btn');
 
+      // Show score
+      successScore.textContent = `${correctCount} / ${totalQuestions}`;
+
+      if (correctCount === totalQuestions) {
+        successIcon.innerHTML = '&#127942;';
+        successTitle.textContent = 'Perfect!';
+      } else if (correctCount > 0) {
+        successIcon.innerHTML = '&#128079;';
+        successTitle.textContent = 'Goed gedaan!';
+      } else {
+        successIcon.innerHTML = '&#128170;';
+        successTitle.textContent = 'Volgende keer beter!';
+      }
+
       if (isLastStop) {
-        successTitle.textContent = 'Fantastisch!';
-        successText.textContent = 'Jullie hebben alle stops afgerond! Wat een prachtige tocht.';
+        // Calculate total score across all stops
+        let totalCorrect = 0, totalTotal = 0;
+        Object.values(scores).forEach(s => {
+          totalCorrect += s.correct;
+          totalTotal += s.total;
+        });
+        successText.textContent = `Totaalscore: ${totalCorrect} van ${totalTotal} vragen goed!`;
         successBtn.innerHTML = 'Bekijk het resultaat &#10148;';
       } else {
         const nextStop = CONFIG.stops.find(s => !completedStops.has(s.id));
-        successTitle.textContent = 'Goed gedaan!';
         successText.textContent = nextStop
-          ? `Op naar de volgende stop: ${nextStop.title}`
+          ? `Op naar: ${nextStop.title}`
           : 'Op naar de volgende stop!';
         successBtn.innerHTML = 'Volgende stop &#10148;';
       }

@@ -844,9 +844,11 @@
       animation: confetti-fall linear forwards;
     }
     @keyframes confetti-fall {
-      0% { opacity: 1; transform: translateY(0) rotateZ(0deg) rotateX(0deg); }
-      75% { opacity: 1; }
-      100% { opacity: 0; transform: translateY(100vh) rotateZ(720deg) rotateX(360deg); }
+      0% { opacity: 1; transform: translateY(0) rotateZ(0deg) rotateX(0deg) translateX(0); }
+      25% { opacity: 1; transform: translateY(25vh) rotateZ(180deg) rotateX(90deg) translateX(var(--sway)); }
+      50% { opacity: 1; transform: translateY(50vh) rotateZ(360deg) rotateX(180deg) translateX(calc(var(--sway) * -0.5)); }
+      75% { opacity: 1; transform: translateY(75vh) rotateZ(540deg) rotateX(270deg) translateX(var(--sway)); }
+      100% { opacity: 0; transform: translateY(105vh) rotateZ(720deg) rotateX(360deg) translateX(0); }
     }
 
     .success-title {
@@ -1768,7 +1770,10 @@
         const duration = 2 + Math.random() * 2;
         const delay = Math.random() * 0.8;
 
+        const sway = -40 + Math.random() * 80; // horizontal sway in px
+
         piece.style.left = left + '%';
+        piece.style.setProperty('--sway', sway + 'px');
         piece.style.backgroundColor = color;
         piece.style.width = shape === 'strip' ? (size * 0.4) + 'px' : size + 'px';
         piece.style.height = shape === 'strip' ? (size * 1.5) + 'px' : size + 'px';

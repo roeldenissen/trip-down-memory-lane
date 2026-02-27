@@ -200,10 +200,15 @@
     /* ============ STOP LIST SCREEN ============ */
     #list-screen {
       flex-direction: column;
+      background:
+        /* Subtle nature/landscape gradient */
+        linear-gradient(170deg, #e9f0e1 0%, #dce7cf 25%, #d3dec8 50%, #cdd8c0 75%, #c5cfb8 100%);
     }
 
     .list-header {
-      background: var(--white);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       padding: 14px 24px;
       display: flex;
       align-items: center;
@@ -222,6 +227,7 @@
     .list-progress {
       font-size: 15px;
       color: var(--text-light);
+      text-align: right;
     }
 
     .list-progress span {
@@ -229,32 +235,95 @@
       font-weight: 700;
     }
 
-    /* Stop list */
+    /* Stop list - route container */
     .stop-list {
       flex: 1;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
-      padding: 20px;
+      padding: 24px 20px 40px;
+      position: relative;
+    }
+
+    /* The route line (vertical dashed path connecting stops) */
+    .route-line {
+      position: absolute;
+      left: 29px;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: repeating-linear-gradient(
+        to bottom,
+        var(--gold-light) 0px,
+        var(--gold-light) 8px,
+        transparent 8px,
+        transparent 16px
+      );
+      border-radius: 2px;
+      z-index: 0;
+    }
+
+    /* Filled route line for completed portion */
+    .route-line-filled {
+      position: absolute;
+      left: 29px;
+      top: 0;
+      width: 4px;
+      background: var(--success);
+      border-radius: 2px;
+      z-index: 1;
+      transition: height 0.5s ease;
     }
 
     .stop-list-item {
       display: flex;
       align-items: center;
       gap: 16px;
-      background: var(--white);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
       border-radius: var(--radius);
-      padding: 20px;
-      margin-bottom: 12px;
-      box-shadow: var(--shadow);
+      padding: 18px 20px;
+      margin-left: 46px;
+      margin-bottom: 0;
+      box-shadow: 0 2px 12px rgba(92, 64, 51, 0.08);
       transition: all 0.3s;
       border-left: 4px solid transparent;
       position: relative;
+      z-index: 2;
+    }
+
+    /* Connector spacing between items */
+    .stop-list-connector {
+      height: 24px;
+      position: relative;
+      z-index: 0;
+    }
+
+    /* Route marker dot on the line — sits on the route-line */
+    .stop-list-item::before {
+      content: '';
+      position: absolute;
+      left: -21px;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--gold-light);
+      border: 2px solid #c8d4b8;
+      z-index: 3;
     }
 
     /* Completed stop */
     .stop-list-item.completed {
       border-left-color: var(--success);
       cursor: pointer;
+    }
+
+    .stop-list-item.completed::before {
+      background: var(--success);
+      border-color: #a8d4a8;
+      box-shadow: 0 0 0 3px rgba(90, 143, 90, 0.2);
     }
 
     .stop-list-item.completed:active {
@@ -268,8 +337,23 @@
     /* Current stop */
     .stop-list-item.current {
       border-left-color: var(--gold);
-      box-shadow: var(--shadow-lg);
-      transform: scale(1.02);
+      box-shadow: 0 4px 24px rgba(201, 168, 76, 0.25);
+      background: rgba(255, 255, 255, 0.97);
+    }
+
+    .stop-list-item.current::before {
+      background: var(--gold);
+      border-color: var(--gold-light);
+      width: 16px;
+      height: 16px;
+      left: -21px;
+      box-shadow: 0 0 0 4px rgba(201, 168, 76, 0.2), 0 0 12px rgba(201, 168, 76, 0.3);
+      animation: pulse-marker 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-marker {
+      0%, 100% { box-shadow: 0 0 0 4px rgba(201, 168, 76, 0.2), 0 0 12px rgba(201, 168, 76, 0.3); }
+      50% { box-shadow: 0 0 0 8px rgba(201, 168, 76, 0.1), 0 0 20px rgba(201, 168, 76, 0.2); }
     }
 
     .stop-list-item.current .stop-list-number {
@@ -281,6 +365,13 @@
       pointer-events: none;
       user-select: none;
       -webkit-user-select: none;
+      background: rgba(255, 255, 255, 0.5);
+    }
+
+    .stop-list-item.locked::before {
+      background: #bbb;
+      border-color: #ccc;
+      opacity: 0.6;
     }
 
     .stop-list-item.locked .stop-list-info {
@@ -316,13 +407,13 @@
 
     .stop-list-title {
       font-family: 'Playfair Display', Georgia, serif;
-      font-size: 18px;
+      font-size: 17px;
       font-weight: 600;
       color: var(--brown);
     }
 
     .stop-list-address {
-      font-size: 14px;
+      font-size: 13px;
       color: var(--text-light);
       margin-top: 3px;
       display: flex;
@@ -332,7 +423,7 @@
 
     .stop-list-address::before {
       content: "\1F4CD";
-      font-size: 13px;
+      font-size: 12px;
     }
 
     .stop-list-action {
@@ -390,6 +481,34 @@
       font-size: 22px;
       opacity: 0.3;
     }
+
+    /* Start & finish markers */
+    .route-marker {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: 14px;
+      padding: 10px 0;
+      position: relative;
+      z-index: 2;
+    }
+
+    .route-marker-icon {
+      font-size: 22px;
+      width: 32px;
+      text-align: center;
+    }
+
+    .route-marker-text {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-light);
+      font-style: italic;
+    }
+
+    .route-marker.start { padding-bottom: 4px; }
+    .route-marker.finish { padding-top: 4px; }
 
     /* ============ STOP SCREEN ============ */
     #stop-screen {
@@ -773,16 +892,17 @@
       .stop-list {
         max-width: 700px;
         margin: 0 auto;
+        position: relative;
       }
     }
 
     /* Scrollbar */
     .stop-content::-webkit-scrollbar,
-    .stop-list::-webkit-scrollbar { width: 6px; }
+    .stop-list::-webkit-scrollbar { width: 4px; }
     .stop-content::-webkit-scrollbar-track,
     .stop-list::-webkit-scrollbar-track { background: transparent; }
     .stop-content::-webkit-scrollbar-thumb,
-    .stop-list::-webkit-scrollbar-thumb { background: var(--gold-light); border-radius: 3px; }
+    .stop-list::-webkit-scrollbar-thumb { background: rgba(201, 168, 76, 0.3); border-radius: 2px; }
   </style>
 </head>
 <body>
@@ -870,7 +990,7 @@
       document.getElementById('start-years').innerHTML = `<span>${years}</span> jaar getrouwd`;
       document.getElementById('total-count').textContent = CONFIG.stops.length;
       document.getElementById('finish-text').textContent =
-        `${name1} & ${name2}, wat een prachtige tocht door ${years} jaar herinneringen! Op naar de volgende ${years}!`;
+        `${name1} & ${name2}, wat een prachtige tocht door ${years} jaar herinneringen!`;
       updateCompletedCount();
     }
 
@@ -986,8 +1106,22 @@
 
       let html = '';
 
+      // Route line (dashed background)
+      html += `<div class="route-line"></div>`;
+
+      // Start marker
+      html += `<div class="route-marker start">`;
+      html += `<div class="route-marker-icon">&#127937;</div>`;
+      html += `<div class="route-marker-text">Start van de tocht</div>`;
+      html += `</div>`;
+
       CONFIG.stops.forEach((stop, index) => {
         const status = getStopStatus(stop, index);
+
+        // Connector between stops
+        if (index > 0) {
+          html += `<div class="stop-list-connector"></div>`;
+        }
 
         const clickable = status === 'completed' ? ` onclick="showStop(${stop.id}, true)"` : '';
         html += `<div class="stop-list-item ${status}"${clickable}>`;
@@ -1013,14 +1147,48 @@
         html += `</div>`;
       });
 
+      // Finish marker
+      html += `<div class="stop-list-connector"></div>`;
+      html += `<div class="route-marker finish">`;
+      html += `<div class="route-marker-icon">&#127881;</div>`;
+      html += `<div class="route-marker-text">De finish!</div>`;
+      html += `</div>`;
+
       container.innerHTML = html;
 
-      setTimeout(() => {
+      // Calculate and set the filled route line height
+      requestAnimationFrame(() => {
+        const filledLine = container.querySelector('.route-line-filled');
+        const items = container.querySelectorAll('.stop-list-item');
+        let lastCompletedItem = null;
+
+        items.forEach(item => {
+          if (item.classList.contains('completed')) lastCompletedItem = item;
+        });
+
+        // Add filled line dynamically
+        let existingFilled = container.querySelector('.route-line-filled');
+        if (!existingFilled) {
+          existingFilled = document.createElement('div');
+          existingFilled.className = 'route-line-filled';
+          container.appendChild(existingFilled);
+        }
+
+        if (lastCompletedItem) {
+          const containerRect = container.getBoundingClientRect();
+          const itemRect = lastCompletedItem.getBoundingClientRect();
+          const height = (itemRect.top + itemRect.height / 2) - containerRect.top + container.scrollTop;
+          existingFilled.style.height = height + 'px';
+        } else {
+          existingFilled.style.height = '0px';
+        }
+
+        // Scroll to current stop
         const currentItem = container.querySelector('.stop-list-item.current');
         if (currentItem) {
           currentItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-      }, 100);
+      });
     }
 
     // ============ STOP ============

@@ -181,20 +181,6 @@ const CONFIG = {
           hint: ""
         }
       ]
-    },
-    {
-      id: 10,
-      title: "De finish - 40 jaar!",
-      address: "Landgoed Nemerlaer, Haaren",
-      description: "Het eindpunt van de tocht. 40 jaar samen, en het avontuur gaat door!",
-      video: "",
-      questions: [
-        {
-          text: "Wat wensen jullie elkaar toe voor de komende 40 jaar?",
-          answer: "Gezondheid en geluk",
-          hint: ""
-        }
-      ]
     }
   ]
 };

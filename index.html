@@ -280,29 +280,19 @@
       -webkit-backdrop-filter: blur(6px);
       border-radius: var(--radius);
       padding: 16px 18px;
-      width: 52%;
-      max-width: 380px;
+      width: 48%;
+      max-width: 360px;
       box-shadow: 0 3px 16px rgba(92, 64, 51, 0.1);
       transition: all 0.3s;
       border-left: 4px solid transparent;
       position: relative;
       z-index: 2;
-    }
-
-    /* Zigzag: even items left, odd items right */
-    .stop-list-item.pos-left {
-      margin-left: 4%;
-      margin-right: auto;
-    }
-
-    .stop-list-item.pos-right {
-      margin-left: auto;
-      margin-right: 4%;
+      /* Horizontal position set dynamically via margin-left in JS */
     }
 
     /* Connector spacing between items */
     .stop-list-connector {
-      height: 20px;
+      height: 60px;
       position: relative;
       z-index: 0;
     }
@@ -860,15 +850,14 @@
       .start-subtitle { font-size: 20px; }
       .stop-content { padding: 16px; }
       .finish-title { font-size: 32px; }
-      /* On narrow screens, stack vertically */
+      /* On narrow screens, less zigzag and smaller spacing */
       .stop-list-item {
-        width: 88%;
-        max-width: none;
+        width: 85% !important;
+        max-width: none !important;
+        margin-left: 7% !important;
       }
-      .stop-list-item.pos-left,
-      .stop-list-item.pos-right {
-        margin-left: 6%;
-        margin-right: 6%;
+      .stop-list-connector {
+        height: 30px;
       }
     }
 
@@ -882,8 +871,11 @@
         max-width: 900px;
       }
       .stop-list-item {
-        width: 44%;
-        max-width: 400px;
+        width: 42%;
+        max-width: 380px;
+      }
+      .stop-list-connector {
+        height: 70px;
       }
     }
 
@@ -1107,15 +1099,39 @@
       html += `<div class="route-marker-text">Start van de tocht</div>`;
       html += `</div>`;
 
+      // Generate varied horizontal positions using seeded random
+      // Each card gets a unique position, creating a winding route feel
+      const posRng = (seed) => { let s = seed; return () => { s = (s * 16807 + 0) % 2147483647; return s / 2147483647; }; };
+      const posRand = posRng(123); // fixed seed for consistent layout
+
+      // Pre-define a set of horizontal "lanes" spread across the width
+      // then shuffle them for organic feel while ensuring good spread
+      const numStops = CONFIG.stops.length;
+      const positions = [];
+      let prevPos = 0.15; // start left-ish
+
+      for (let i = 0; i < numStops; i++) {
+        // Ensure minimum shift of 18% from previous position for clear separation
+        let newPos;
+        let attempts = 0;
+        do {
+          newPos = 0.02 + posRand() * 0.50; // range: 2% to 52%
+          attempts++;
+        } while (Math.abs(newPos - prevPos) < 0.18 && attempts < 20);
+
+        positions.push(newPos);
+        prevPos = newPos;
+      }
+
       CONFIG.stops.forEach((stop, index) => {
         const status = getStopStatus(stop, index);
-        const side = index % 2 === 0 ? 'pos-left' : 'pos-right';
+        const marginPct = (positions[index] * 100).toFixed(1);
 
         // Connector between stops
         html += `<div class="stop-list-connector"></div>`;
 
         const clickable = status === 'completed' ? ` onclick="showStop(${stop.id}, true)"` : '';
-        html += `<div class="stop-list-item ${status} ${side}"${clickable}>`;
+        html += `<div class="stop-list-item ${status}" style="margin-left:${marginPct}%"${clickable}>`;
         html += `<div class="stop-list-number">${stop.id}</div>`;
         html += `<div class="stop-list-info">`;
         html += `<div class="stop-list-title">${escapeHtml(stop.title)}</div>`;
@@ -1218,32 +1234,77 @@
 
       // Nature decorations (trees, bushes, flowers)
       const decos = [
-        { e: '&#127794;', s: 28 },  // tree
+        { e: '&#127794;', s: 28 },  // deciduous tree
         { e: '&#127795;', s: 24 },  // evergreen
         { e: '&#127793;', s: 18 },  // sunflower
         { e: '&#127800;', s: 16 },  // cherry blossom
         { e: '&#127807;', s: 20 },  // herb/bush
-        { e: '&#127806;', s: 16 },  // ear of rice/wheat
+        { e: '&#127806;', s: 16 },  // wheat
+        { e: '&#127799;', s: 15 },  // tulip
+        { e: '&#129716;', s: 14 },  // potted plant
+      ];
+      // Larger scenery elements (less frequent)
+      const bigDecos = [
+        { e: '&#127794;', s: 36 },  // big tree
+        { e: '&#127795;', s: 32 },  // big evergreen
+      ];
+      // Small ground details
+      const smallDecos = [
+        { e: '&#127807;', s: 12 },  // small herb
+        { e: '&#127806;', s: 11 },  // small wheat
+        { e: '&#127800;', s: 10 },  // small blossom
+        { e: '&#127799;', s: 10 },  // small tulip
       ];
 
       let decoHtml = '';
       // Place nature decorations semi-randomly along the route
       const rng = (seed) => { let s = seed; return () => { s = (s * 16807 + 0) % 2147483647; return s / 2147483647; }; };
       const rand = rng(42);
+
+      // Main decorations near each stop point
       for (let i = 0; i < allPts.length - 1; i++) {
         const p = allPts[i];
-        const numDecos = 2 + Math.floor(rand() * 2);
+        // 3-5 medium decorations near each stop
+        const numDecos = 3 + Math.floor(rand() * 3);
         for (let d = 0; d < numDecos; d++) {
           const deco = decos[Math.floor(rand() * decos.length)];
-          // Place on opposite side of the card
-          const offsetX = (rand() > 0.5 ? 1 : -1) * (120 + rand() * 200);
-          const offsetY = (rand() - 0.5) * 60;
+          const offsetX = (rand() > 0.5 ? 1 : -1) * (100 + rand() * 220);
+          const offsetY = (rand() - 0.5) * 80;
           const x = Math.max(10, Math.min(svgW - 40, p.x + offsetX));
           const y = p.y + offsetY;
-          const opacity = 0.25 + rand() * 0.25;
+          const opacity = 0.3 + rand() * 0.25;
           const size = deco.s + Math.floor(rand() * 8);
           decoHtml += `<div class="nature-deco" style="left:${x}px;top:${y}px;font-size:${size}px;opacity:${opacity}">${deco.e}</div>`;
         }
+
+        // 1-2 larger background trees per stop
+        if (rand() > 0.3) {
+          const big = bigDecos[Math.floor(rand() * bigDecos.length)];
+          const bx = Math.max(20, Math.min(svgW - 50, p.x + (rand() > 0.5 ? 1 : -1) * (180 + rand() * 200)));
+          const by = p.y + (rand() - 0.5) * 100;
+          decoHtml += `<div class="nature-deco" style="left:${bx}px;top:${by}px;font-size:${big.s}px;opacity:${0.18 + rand() * 0.12}">${big.e}</div>`;
+        }
+
+        // 2-3 small ground details between stops
+        const numSmall = 2 + Math.floor(rand() * 2);
+        for (let s = 0; s < numSmall; s++) {
+          const sm = smallDecos[Math.floor(rand() * smallDecos.length)];
+          const sx = Math.max(5, Math.min(svgW - 20, p.x + (rand() - 0.5) * 350));
+          const sy = p.y + 30 + rand() * 50;
+          decoHtml += `<div class="nature-deco" style="left:${sx}px;top:${sy}px;font-size:${sm.s}px;opacity:${0.2 + rand() * 0.2}">${sm.e}</div>`;
+        }
+      }
+
+      // Extra scattered decorations in empty areas along the edges
+      const numEdgeDecos = Math.floor(svgH / 120);
+      for (let i = 0; i < numEdgeDecos; i++) {
+        const deco = decos[Math.floor(rand() * decos.length)];
+        const side = rand() > 0.5;
+        const x = side ? (svgW - 30 - rand() * 80) : (10 + rand() * 80);
+        const y = 40 + rand() * (svgH - 80);
+        const opacity = 0.15 + rand() * 0.2;
+        const size = deco.s - 4 + Math.floor(rand() * 6);
+        decoHtml += `<div class="nature-deco" style="left:${x}px;top:${y}px;font-size:${size}px;opacity:${opacity}">${deco.e}</div>`;
       }
 
       // Build SVG

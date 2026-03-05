@@ -63,7 +63,20 @@ const CONFIG = {
       address: "Heuvelring 114, Tilburg",
       description: "Hier wacht een videoboodschap van Loes & Cor!",
       video: "assets/videos/stop1.mp4",
-      questions: []
+      questions: [
+        {
+          text: "Wat weten jullie nog van de uitgaansgelegenheden van vroeger?",
+          type: "multi",
+          answers: [
+            "De Schuur", 
+            "Extase", 
+            "Old Fashion", 
+            "Cambrinus", 
+            "LP's luisteren", 
+            "Jim Reeves", 
+            "Bahlsen Pinda's", 
+            "The Gallery Club"
+          ]
     },
     {
       id: 2,

@@ -17,12 +17,18 @@
  *  3. VRAGEN: Elke stop kan meerdere vragen hebben.
  *     Per vraag geef je op:
  *       - text:   de vraagtekst
- *       - answer: het juiste antwoord
- *       - hint:   (optioneel) een hint die getoond wordt bij het antwoord,
- *                 bijv. "Het was in de zomer van dat jaar!"
+ *       - answer: het juiste antwoord (voor normale vragen)
+ *       - hint:   (optioneel) een hint die getoond wordt bij het antwoord
  *
  *     Het antwoord wordt NIET hoofdlettergevoelig vergeleken,
  *     en kleine typfouten worden door de vingers gezien.
+ *
+ *     MULTI-ANTWOORD VRAGEN (type: "multi"):
+ *     Voor vragen zoals "noem zoveel mogelijk..." gebruik je:
+ *       - type:    "multi"
+ *       - answers: ["antwoord1", "antwoord2", ...] (array van goede antwoorden)
+ *     De spelers typen antwoorden gescheiden door komma's of enters.
+ *     Elk goed antwoord telt als punt.
  *
  *  VOORBEELD STOP:
  *  {
@@ -66,9 +72,24 @@ const CONFIG = {
       ]
     },
     {
+      // === NIEUWE STOP - VUL HIERONDER AAN ===
       id: 2,
+      title: "TODO: Titel nieuwe stop",
+      address: "TODO: Adres nieuwe stop",
+      description: "TODO: Beschrijving nieuwe stop.",
+      video: "",  // bijv. "assets/videos/stop2.mp4"
+      questions: [
+        {
+          text: "TODO: Vraag voor nieuwe stop?",
+          answer: "TODO",
+          hint: ""
+        }
+      ]
+    },
+    {
+      id: 3,
       title: "Het eerste afspraakje",
-      address: "Adres stop 2, Tilburg",
+      address: "Adres stop 3, Tilburg",
       description: "Hier hadden Wilma en Kees hun allereerste date.",
       video: "",
       questions: [
@@ -80,11 +101,11 @@ const CONFIG = {
       ]
     },
     {
-      id: 3,
+      id: 4,
       title: "Textielmuseum",
       address: "Goirkestraat 96, Tilburg",
       description: "Een stukje historie van jullie stad",
-      video: "assets/videos/stop3.mp4",
+      video: "assets/videos/stop4.mp4",
       questions: [
         {
           text: "Wat gebeurde er met de fiets van elk paaltje?",
@@ -92,7 +113,7 @@ const CONFIG = {
           hint: "Kaduuk"
         },
         {
-         text: "Wat was Wilma met het weekendje weg met de kids vergeten?",
+          text: "Wat was Wilma met het weekendje weg met de kids vergeten?",
           answer: "Pyjama",
           hint: "Je slaapt erin"
         },
@@ -104,37 +125,78 @@ const CONFIG = {
       ]
     },
     {
-      id: 4,
+      id: 5,
       title: "De trouwlocatie",
-      address: "Adres stop 4, Oisterwijk",
+      address: "Adres stop 5, Oisterwijk",
       description: "Hier gaven Wilma en Kees elkaar het ja-woord.",
       video: "",
       questions: [
         {
-          text: "Wat was het mooiste moment van de trouwdag?",
-          answer: "Het ja-woord",
-          hint: ""
-        }
-      ]
-    },
-    {
-      id: 5,
-      title: "Het eerste huis",
-      address: "Adres stop 5, Tilburg",
-      description: "Het eerste eigen stekje van het kersverse echtpaar.",
-      video: "",
-      questions: [
-        {
-          text: "Wat was het eerste dat jullie kochten voor het nieuwe huis?",
-          answer: "Een bank",
-          hint: ""
+          text: "Noem zoveel mogelijk winkels op!",
+          type: "multi",
+          answers: [
+            "Bertens van Iersel",
+            "slagerij Voogd",
+            "Simotex",
+            "bakker van Riel",
+            "Trommels",
+            "Harrie Brocken",
+            "slager Wijfels",
+            "Flamingo",
+            "kapper Tooten",
+            "Bas Lemmens",
+            "cafetaria Adje",
+            "drankhandel Horsten",
+            "Très Jolie",
+            "Nodacon",
+            "drogist Mommers Verkammen",
+            "meubelzaak Boeren",
+            "tabakszaak",
+            "Smash",
+            "schoenmaker van Bezouw",
+            "Keke Staps",
+            "Jan van Loon",
+            "slagerij Konings",
+            "café Moorees",
+            "drukkerij Rijnen",
+            "bakker van Kempen",
+            "van Knegsel",
+            "rijschool van de Ven",
+            "frietuur Kootje",
+            "rijschool Succes",
+            "Klijsen",
+            "poelier Versteeg",
+            "Boomtax",
+            "lampenwinkel van Beek"
+          ],
+          hint: "Er waren er 34!"
         }
       ]
     },
     {
       id: 6,
+      title: "Het eerste huis",
+      address: "Adres stop 6, Tilburg",
+      description: "Het eerste eigen stekje van het kersverse echtpaar.",
+      video: "",
+      portrait: true,
+      questions: [
+        {
+          text: "Wat weet jij van ...? Noem zoveel mogelijk dingen!",
+          type: "multi",
+          answers: [
+            "PLACEHOLDER_ANTWOORD_1",
+            "PLACEHOLDER_ANTWOORD_2",
+            "PLACEHOLDER_ANTWOORD_3"
+          ],
+          hint: "Er zijn meerdere goede antwoorden!"
+        }
+      ]
+    },
+    {
+      id: 7,
       title: "Een bijzondere herinnering",
-      address: "Adres stop 6, Oisterwijk",
+      address: "Adres stop 7, Oisterwijk",
       description: "Een plek die verbonden is aan een onvergetelijk moment.",
       video: "",
       questions: [
@@ -146,9 +208,9 @@ const CONFIG = {
       ]
     },
     {
-      id: 7,
+      id: 8,
       title: "Favoriete uitje",
-      address: "Adres stop 7, Oisterwijk",
+      address: "Adres stop 8, Oisterwijk",
       description: "Hier kwamen Wilma en Kees graag samen.",
       video: "",
       questions: [
@@ -159,33 +221,26 @@ const CONFIG = {
         }
       ]
     },
-    {
-      id: 8,
-      title: "De kinderen",
-      address: "Adres stop 8, Berkel-Enschot",
-      description: "Een plek die alles te maken heeft met het gezin.",
-      video: "",
-      questions: [
-        {
-          text: "Wat is jullie mooiste gezinsherinnering op deze plek?",
-          answer: "De eerste schooldag",
-          hint: ""
-        }
-      ]
-    },
-    {
-      id: 9,
-      title: "Samen oud worden",
-      address: "Adres stop 9, Oisterwijk",
-      description: "Een plek die staat voor de latere jaren samen.",
-      video: "",
-      questions: [
-        {
-          text: "Wat maakt jullie het meest trots als jullie terugkijken?",
-          answer: "De kinderen",
-          hint: ""
-        }
-      ]
-    }
+  ],
+
+  // Geheime coördinaten van de finish (stop 8)
+  // Na elke stop 1-7 wordt een stukje onthuld
+  finishCoordinates: "51.58931° N, 5.23185° E",
+  // Hoe de coördinaten stap voor stap onthuld worden:
+  // Na stop 1: "51.5____° N, _.____° E"
+  // Na stop 2: "51.58___° N, _.____° E"
+  // Na stop 3: "51.589__° N, _.____° E"
+  // Na stop 4: "51.589__° N, 5.____° E"
+  // Na stop 5: "51.5893_° N, 5.2___° E"
+  // Na stop 6: "51.58931° N, 5.23__° E"
+  // Na stop 7: "51.58931° N, 5.23185° E" (volledig!)
+  coordinateReveals: [
+    "51.5____° N, _.____° E",
+    "51.58___° N, _.____° E",
+    "51.589__° N, _.____° E",
+    "51.589__° N, 5.____° E",
+    "51.5893_° N, 5.2___° E",
+    "51.58931° N, 5.23__° E",
+    "51.58931° N, 5.23185° E"
   ]
 };

@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#C9A84C">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <link rel="icon" type="image/svg+xml" href="assets/icons/icon.svg">
   <title>Trip Down Memory Lane</title>
 
   <style>
@@ -509,6 +513,67 @@
     }
     .finish-badge-icon { font-size: 13px; }
 
+    /* Coordinate reveal card */
+    .coord-reveal {
+      background: linear-gradient(135deg, rgba(253,248,238,0.95) 0%, rgba(232,213,163,0.5) 100%);
+      border: 2px dashed var(--gold);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin: 12px auto;
+      max-width: 380px;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+    .coord-reveal-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gold-dark);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 6px;
+    }
+    .coord-reveal-value {
+      font-family: 'Courier New', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--brown);
+      letter-spacing: 1px;
+    }
+    .coord-reveal-value .coord-hidden {
+      color: var(--gold-light);
+      opacity: 0.5;
+    }
+    .coord-reveal-hint {
+      font-size: 12px;
+      color: var(--text-light);
+      margin-top: 6px;
+      font-style: italic;
+    }
+
+    /* Coordinate reveal in success overlay */
+    .success-coord {
+      margin-top: 12px;
+      padding: 10px 16px;
+      background: var(--cream);
+      border-radius: var(--radius-sm);
+      border: 1px dashed var(--gold);
+    }
+    .success-coord-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gold-dark);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+    .success-coord-value {
+      font-family: 'Courier New', monospace;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--brown);
+    }
+
     /* ============ STOP SCREEN ============ */
     #stop-screen {
       background: var(--cream);
@@ -703,6 +768,51 @@
     }
 
     .answer-input::placeholder { color: #B8AFA3; }
+
+    /* Multi-answer: larger input */
+    .answer-input.multi-input {
+      min-height: 100px;
+    }
+    .multi-hint {
+      font-size: 12px;
+      color: var(--text-light);
+      font-style: italic;
+      margin-top: 4px;
+    }
+
+    /* Multi-answer results */
+    .multi-results {
+      margin-top: 10px;
+    }
+    .multi-results-found {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .multi-tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .multi-tag.found {
+      background: #e8f5e8;
+      color: #2d6a2d;
+    }
+    .multi-tag.missed {
+      background: #f5e8e8;
+      color: #8b2d2d;
+    }
+
+    /* Portrait/vertical video */
+    .video-container.portrait {
+      padding-bottom: 0;
+      max-width: 320px;
+      margin: 0 auto;
+      aspect-ratio: 9 / 16;
+    }
 
     /* Answer feedback */
     .answer-feedback {
@@ -940,6 +1050,58 @@
     .stop-list::-webkit-scrollbar-track { background: transparent; }
     .stop-content::-webkit-scrollbar-thumb,
     .stop-list::-webkit-scrollbar-thumb { background: rgba(201, 168, 76, 0.3); border-radius: 2px; }
+
+    /* ============ OFFLINE STATUS ============ */
+    .offline-status {
+      margin-top: 24px;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-family: 'Lato', sans-serif;
+      font-size: 13px;
+      text-align: center;
+      transition: all 0.5s ease;
+      max-width: 280px;
+    }
+
+    .offline-status.loading {
+      background: rgba(201, 168, 76, 0.12);
+      color: var(--gold-dark);
+    }
+
+    .offline-status.ready {
+      background: rgba(90, 143, 90, 0.12);
+      color: var(--success-dark);
+    }
+
+    .offline-status.error {
+      background: rgba(180, 60, 60, 0.12);
+      color: #8b3030;
+    }
+
+    .offline-progress {
+      margin-top: 8px;
+      height: 4px;
+      background: rgba(201, 168, 76, 0.2);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .offline-progress-bar {
+      height: 100%;
+      background: var(--gold);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+
+    .offline-status.ready .offline-progress {
+      display: none;
+    }
+
+    .offline-icon {
+      font-size: 16px;
+      margin-right: 4px;
+    }
   </style>
 </head>
 <body>
@@ -954,6 +1116,12 @@
     <button class="btn btn-primary" onclick="showStopList()">
       Start de tocht &#10148;
     </button>
+    <div class="offline-status loading" id="offline-status">
+      <div id="offline-text"><span class="offline-icon">&#9203;</span> Voorbereiden voor offline gebruik...</div>
+      <div class="offline-progress">
+        <div class="offline-progress-bar" id="offline-progress-bar"></div>
+      </div>
+    </div>
   </div>
 
   <!-- ========== STOP LIST SCREEN ========== -->
@@ -1001,6 +1169,10 @@
       <div class="success-score" id="success-score"></div>
       <h3 class="success-title" id="success-title">Goed gedaan!</h3>
       <p class="success-text" id="success-text">Op naar de volgende stop...</p>
+      <div class="success-coord" id="success-coord" style="display:none;">
+        <div class="success-coord-label">Nieuwe hint naar de finish!</div>
+        <div class="success-coord-value" id="success-coord-value"></div>
+      </div>
       <button class="btn btn-primary" id="success-btn" onclick="closeSuccessAndContinue()">
         Volgende stop &#10148;
       </button>
@@ -1214,6 +1386,22 @@
       });
 
       html += `</div>`; // close route-items
+
+      // Coordinate reveal card (shown after at least 1 stop is completed, before finish)
+      const numCompleted = completedStops.size;
+      if (CONFIG.coordinateReveals && numCompleted > 0 && numCompleted <= CONFIG.coordinateReveals.length) {
+        const coordText = CONFIG.coordinateReveals[numCompleted - 1];
+        const isFullReveal = numCompleted >= CONFIG.coordinateReveals.length;
+        html += `<div class="coord-reveal">`;
+        html += `<div class="coord-reveal-label">${isFullReveal ? 'De finish-co\u00f6rdinaten!' : 'Co\u00f6rdinaten van de finish'}</div>`;
+        html += `<div class="coord-reveal-value">${formatCoordReveal(coordText)}</div>`;
+        if (!isFullReveal) {
+          html += `<div class="coord-reveal-hint">Nog ${CONFIG.coordinateReveals.length - numCompleted} stop${CONFIG.coordinateReveals.length - numCompleted === 1 ? '' : 's'} voor de volledige co\u00f6rdinaten</div>`;
+        } else {
+          html += `<div class="coord-reveal-hint">Zoek deze locatie op en fiets erheen!</div>`;
+        }
+        html += `</div>`;
+      }
 
       container.innerHTML = html;
 
@@ -1490,7 +1678,8 @@
       // Video
       html += `<div class="video-section">`;
       html += `<div class="section-label">Bekijk de video</div>`;
-      html += `<div class="video-container">`;
+      const portraitClass = stop.portrait ? ' portrait' : '';
+      html += `<div class="video-container${portraitClass}">`;
       if (stop.video && stop.video.trim() !== '') {
         html += `<video controls playsinline>
                   <source src="${escapeHtml(stop.video)}" type="video/mp4">
@@ -1522,38 +1711,75 @@
 
           if (reviewMode) {
             // Review mode: show answered questions with feedback
-            const isCorrect = checkAnswer(savedAnswer, q.answer);
-            const cardClass = isCorrect ? 'correct' : 'wrong';
-            const inputClass = isCorrect ? 'correct' : 'wrong';
+            if (q.type === 'multi') {
+              // Multi-answer review
+              const userParts = (savedAnswer || '').split(/[,\n]/).map(a => a.trim()).filter(a => a);
+              const found = [];
+              const missed = [];
+              q.answers.forEach(correct => {
+                if (userParts.some(ua => checkAnswer(ua, correct))) {
+                  found.push(correct);
+                } else {
+                  missed.push(correct);
+                }
+              });
+              const cardClass = found.length > 0 ? 'correct' : 'wrong';
 
-            html += `<div class="question-card ${cardClass}">
-                      <div class="question-number">${stop.questions.length > 1 ? `Vraag ${idx + 1}` : 'De vraag'}</div>
-                      <div class="question-text">${escapeHtml(q.text)}</div>
-                      <textarea class="answer-input ${inputClass}" disabled rows="2">${escapeHtml(savedAnswer)}</textarea>
-                      <div class="answer-feedback ${cardClass} show">`;
-
-            if (isCorrect) {
-              html += `<span class="answer-feedback-icon">&#10003;</span> Goed zo!`;
-              if (q.hint && q.hint.trim()) {
-                html += `<span class="hint-text">${escapeHtml(q.hint)}</span>`;
-              }
+              html += `<div class="question-card ${cardClass}">
+                        <div class="question-number">${stop.questions.length > 1 ? `Vraag ${idx + 1}` : 'De vraag'}</div>
+                        <div class="question-text">${escapeHtml(q.text)}</div>
+                        <textarea class="answer-input multi-input ${cardClass}" disabled rows="3">${escapeHtml(savedAnswer)}</textarea>
+                        <div class="multi-results">
+                          <strong>${found.length} / ${q.answers.length} gevonden</strong>
+                          <div class="multi-results-found">`;
+              found.forEach(a => { html += `<span class="multi-tag found">${escapeHtml(a)}</span>`; });
+              missed.forEach(a => { html += `<span class="multi-tag missed">${escapeHtml(a)}</span>`; });
+              html += `</div></div></div>`;
             } else {
-              html += `<span class="answer-feedback-icon">&#10007;</span> Helaas!`;
-              html += `<span class="correct-answer">Het juiste antwoord: ${escapeHtml(q.answer)}</span>`;
-              if (q.hint && q.hint.trim()) {
-                html += `<span class="hint-text">${escapeHtml(q.hint)}</span>`;
-              }
-            }
+              // Regular review
+              const isCorrect = checkAnswer(savedAnswer, q.answer);
+              const cardClass = isCorrect ? 'correct' : 'wrong';
+              const inputClass = isCorrect ? 'correct' : 'wrong';
 
-            html += `</div></div>`;
+              html += `<div class="question-card ${cardClass}">
+                        <div class="question-number">${stop.questions.length > 1 ? `Vraag ${idx + 1}` : 'De vraag'}</div>
+                        <div class="question-text">${escapeHtml(q.text)}</div>
+                        <textarea class="answer-input ${inputClass}" disabled rows="2">${escapeHtml(savedAnswer)}</textarea>
+                        <div class="answer-feedback ${cardClass} show">`;
+
+              if (isCorrect) {
+                html += `<span class="answer-feedback-icon">&#10003;</span> Goed zo!`;
+                if (q.hint && q.hint.trim()) {
+                  html += `<span class="hint-text">${escapeHtml(q.hint)}</span>`;
+                }
+              } else {
+                html += `<span class="answer-feedback-icon">&#10007;</span> Helaas!`;
+                html += `<span class="correct-answer">Het juiste antwoord: ${escapeHtml(q.answer)}</span>`;
+                if (q.hint && q.hint.trim()) {
+                  html += `<span class="hint-text">${escapeHtml(q.hint)}</span>`;
+                }
+              }
+
+              html += `</div></div>`;
+            }
           } else {
             // Active mode: editable inputs
+            const isMulti = q.type === 'multi';
+            const inputClass = isMulti ? 'answer-input multi-input' : 'answer-input';
+            const placeholder = isMulti
+              ? 'Typ zoveel mogelijk antwoorden, gescheiden door komma\'s of enters...'
+              : 'Typ jullie antwoord hier...';
+            const rows = isMulti ? 4 : 2;
+
             html += `<div class="question-card" id="qcard-${answerKey}">
                       <div class="question-number">${stop.questions.length > 1 ? `Vraag ${idx + 1}` : 'De vraag'}</div>
                       <div class="question-text">${escapeHtml(q.text)}</div>
-                      <textarea class="answer-input" id="answer-${answerKey}"
-                        placeholder="Typ jullie antwoord hier..." rows="2">${escapeHtml(savedAnswer)}</textarea>
-                      <div class="answer-feedback" id="feedback-${answerKey}"></div>
+                      <textarea class="${inputClass}" id="answer-${answerKey}"
+                        placeholder="${placeholder}" rows="${rows}">${escapeHtml(savedAnswer)}</textarea>`;
+            if (isMulti) {
+              html += `<div class="multi-hint">Er zijn ${q.answers.length} mogelijke antwoorden</div>`;
+            }
+            html += `<div class="answer-feedback" id="feedback-${answerKey}"></div>
                     </div>`;
           }
         });
@@ -1625,7 +1851,7 @@
       // All filled - now check answers
       answersChecked = true;
       let correctCount = 0;
-      const totalQuestions = stop.questions.length;
+      let totalCount = 0;
 
       stop.questions.forEach((q, idx) => {
         const answerKey = `${stop.id}-${idx}`;
@@ -1641,34 +1867,66 @@
         // Disable input
         input.disabled = true;
 
-        // Check correctness
-        const isCorrect = checkAnswer(input.value, q.answer);
-        if (isCorrect) correctCount++;
+        if (q.type === 'multi') {
+          // Multi-answer: check each user answer against the list
+          totalCount += q.answers.length;
+          const userParts = input.value.split(/[,\n]/).map(a => a.trim()).filter(a => a);
+          const found = [];
+          const missed = [];
 
-        // Show feedback
-        card.classList.add(isCorrect ? 'correct' : 'wrong');
-        input.classList.add(isCorrect ? 'correct' : 'wrong');
+          q.answers.forEach(correct => {
+            if (userParts.some(ua => checkAnswer(ua, correct))) {
+              found.push(correct);
+            } else {
+              missed.push(correct);
+            }
+          });
 
-        let feedbackHtml = '';
-        if (isCorrect) {
-          feedbackHtml = `<span class="answer-feedback-icon">&#10003;</span> Goed zo!`;
-          if (q.hint && q.hint.trim()) {
-            feedbackHtml += `<span class="hint-text">${escapeHtml(q.hint)}</span>`;
-          }
-          feedback.className = 'answer-feedback correct show';
+          correctCount += found.length;
+          const cardClass = found.length > 0 ? 'correct' : 'wrong';
+          card.classList.add(cardClass);
+          input.classList.add(cardClass);
+
+          let feedbackHtml = `<div class="multi-results">
+            <strong>${found.length} / ${q.answers.length} gevonden!</strong>
+            <div class="multi-results-found">`;
+          found.forEach(a => { feedbackHtml += `<span class="multi-tag found">${escapeHtml(a)}</span>`; });
+          missed.forEach(a => { feedbackHtml += `<span class="multi-tag missed">${escapeHtml(a)}</span>`; });
+          feedbackHtml += `</div></div>`;
+          feedback.innerHTML = feedbackHtml;
+          feedback.className = 'answer-feedback show';
+          feedback.style.background = 'transparent';
+          feedback.style.border = 'none';
         } else {
-          feedbackHtml = `<span class="answer-feedback-icon">&#10007;</span> Helaas!`;
-          feedbackHtml += `<span class="correct-answer">Het juiste antwoord: ${escapeHtml(q.answer)}</span>`;
-          if (q.hint && q.hint.trim()) {
-            feedbackHtml += `<span class="hint-text">${escapeHtml(q.hint)}</span>`;
+          // Regular answer: single check
+          totalCount += 1;
+          const isCorrect = checkAnswer(input.value, q.answer);
+          if (isCorrect) correctCount++;
+
+          card.classList.add(isCorrect ? 'correct' : 'wrong');
+          input.classList.add(isCorrect ? 'correct' : 'wrong');
+
+          let feedbackHtml = '';
+          if (isCorrect) {
+            feedbackHtml = `<span class="answer-feedback-icon">&#10003;</span> Goed zo!`;
+            if (q.hint && q.hint.trim()) {
+              feedbackHtml += `<span class="hint-text">${escapeHtml(q.hint)}</span>`;
+            }
+            feedback.className = 'answer-feedback correct show';
+          } else {
+            feedbackHtml = `<span class="answer-feedback-icon">&#10007;</span> Helaas!`;
+            feedbackHtml += `<span class="correct-answer">Het juiste antwoord: ${escapeHtml(q.answer)}</span>`;
+            if (q.hint && q.hint.trim()) {
+              feedbackHtml += `<span class="hint-text">${escapeHtml(q.hint)}</span>`;
+            }
+            feedback.className = 'answer-feedback wrong show';
           }
-          feedback.className = 'answer-feedback wrong show';
+          feedback.innerHTML = feedbackHtml;
         }
-        feedback.innerHTML = feedbackHtml;
       });
 
       // Save score
-      scores[stop.id] = { correct: correctCount, total: totalQuestions };
+      scores[stop.id] = { correct: correctCount, total: totalCount };
 
       // Mark as completed
       completedStops.add(stop.id);
@@ -1678,7 +1936,7 @@
       const submitBtn = document.getElementById('submit-btn');
       submitBtn.innerHTML = 'Ga verder &#10148;';
       submitBtn.className = 'btn btn-primary';
-      submitBtn.onclick = function() { showSuccessOverlay(stop, correctCount, totalQuestions); };
+      submitBtn.onclick = function() { showSuccessOverlay(stop, correctCount, totalCount); };
 
       // Scroll to first question to see feedback
       const firstCard = document.getElementById(`qcard-${stop.id}-0`);
@@ -1693,6 +1951,8 @@
       const successTitle = document.getElementById('success-title');
       const successText = document.getElementById('success-text');
       const successBtn = document.getElementById('success-btn');
+      const successCoord = document.getElementById('success-coord');
+      const successCoordValue = document.getElementById('success-coord-value');
 
       // Show score
       successScore.textContent = `${correctCount} / ${totalQuestions}`;
@@ -1717,12 +1977,23 @@
         });
         successText.textContent = `Totaalscore: ${totalCorrect} van ${totalTotal} vragen goed!`;
         successBtn.innerHTML = 'Bekijk het resultaat &#10148;';
+        successCoord.style.display = 'none';
       } else {
         const nextStop = CONFIG.stops.find(s => !completedStops.has(s.id));
         successText.textContent = nextStop
           ? `Op naar: ${nextStop.title}`
           : 'Op naar de volgende stop!';
         successBtn.innerHTML = 'Volgende stop &#10148;';
+
+        // Show coordinate reveal (stops 1-6 each reveal a piece)
+        const revealIdx = completedStops.size - 1; // 0-indexed
+        if (CONFIG.coordinateReveals && revealIdx >= 0 && revealIdx < CONFIG.coordinateReveals.length) {
+          const coordText = CONFIG.coordinateReveals[revealIdx];
+          successCoordValue.innerHTML = formatCoordReveal(coordText);
+          successCoord.style.display = 'block';
+        } else {
+          successCoord.style.display = 'none';
+        }
       }
 
       overlay.classList.add('show');
@@ -1731,6 +2002,11 @@
       if (isLastStop || correctCount === totalQuestions) {
         setTimeout(() => launchConfetti(), 300);
       }
+    }
+
+    // Format coordinate string: underscores become faded
+    function formatCoordReveal(coordStr) {
+      return coordStr.replace(/_/g, '<span class="coord-hidden">_</span>');
     }
 
     function closeSuccessAndContinue() {
@@ -1796,8 +2072,87 @@
       return div.innerHTML;
     }
 
+    // ============ OFFLINE PREPARATION ============
+    async function prepareOffline() {
+      const statusEl = document.getElementById('offline-status');
+      const textEl = document.getElementById('offline-text');
+      const barEl = document.getElementById('offline-progress-bar');
+
+      if (!statusEl || !textEl || !barEl) return;
+
+      // Collect all video URLs from config
+      const videoUrls = CONFIG.stops
+        .filter(s => s.video && s.video.trim() !== '')
+        .map(s => s.video);
+
+      if (videoUrls.length === 0) {
+        // No videos to cache
+        statusEl.className = 'offline-status ready';
+        textEl.innerHTML = '<span class="offline-icon">&#10003;</span> Klaar voor offline gebruik';
+        return;
+      }
+
+      try {
+        // Wait for service worker to be ready
+        const registration = await navigator.serviceWorker.ready;
+        const cache = await caches.open('trip-memory-lane-v1');
+
+        let cached = 0;
+        const total = videoUrls.length;
+
+        for (const url of videoUrls) {
+          textEl.innerHTML = `<span class="offline-icon">&#9203;</span> Video's laden... ${cached + 1} / ${total}`;
+          barEl.style.width = `${(cached / total) * 100}%`;
+
+          // Check if already cached
+          const existing = await cache.match(url);
+          if (!existing) {
+            // Fetch and cache the video
+            try {
+              const response = await fetch(url);
+              if (response.ok) {
+                await cache.put(url, response);
+              }
+            } catch (e) {
+              // Individual video failed, continue with others
+              console.warn('Kon video niet cachen:', url, e);
+            }
+          }
+
+          cached++;
+          barEl.style.width = `${(cached / total) * 100}%`;
+        }
+
+        // All done!
+        statusEl.className = 'offline-status ready';
+        textEl.innerHTML = '<span class="offline-icon">&#10003;</span> Klaar voor offline gebruik!';
+
+      } catch (e) {
+        console.warn('Offline voorbereiding mislukt:', e);
+        statusEl.className = 'offline-status error';
+        textEl.innerHTML = '<span class="offline-icon">&#9888;</span> Kon niet alles offline opslaan';
+      }
+    }
+
     // ============ START ============
     init();
+
+    // ============ SERVICE WORKER ============
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js')
+        .then(() => prepareOffline())
+        .catch(() => {
+          const statusEl = document.getElementById('offline-status');
+          if (statusEl) {
+            statusEl.className = 'offline-status error';
+            const textEl = document.getElementById('offline-text');
+            if (textEl) textEl.innerHTML = '<span class="offline-icon">&#9888;</span> Service Worker niet beschikbaar';
+          }
+        });
+    } else {
+      const statusEl = document.getElementById('offline-status');
+      if (statusEl) statusEl.style.display = 'none';
+    }
   </script>
 </body>
 </html>

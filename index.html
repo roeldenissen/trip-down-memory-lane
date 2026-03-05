@@ -883,6 +883,22 @@
 
     .submit-hint.show { opacity: 1; }
 
+    /* Reveal questions transition */
+    .reveal-questions-section {
+      text-align: center;
+      padding: 20px 0 8px;
+    }
+    .questions-area.hidden {
+      display: none;
+    }
+    .questions-area.revealing {
+      animation: fadeSlideIn 0.4s ease-out;
+    }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     /* Score display in success overlay */
     .success-score {
       font-size: 48px;
@@ -1746,8 +1762,21 @@
       }
       html += `</div></div>`;
 
-      // Questions
-      if (stop.questions && stop.questions.length > 0) {
+      // "Naar de vragen" button (only in active mode when there are questions)
+      const hasQuestions = stop.questions && stop.questions.length > 0;
+      if (hasQuestions && !reviewMode) {
+        const vraagTekst = stop.questions.length === 1 ? 'Naar de vraag' : 'Naar de vragen';
+        html += `<div class="reveal-questions-section" id="reveal-questions-btn">
+                  <button class="btn btn-primary" onclick="revealQuestions()">
+                    ${vraagTekst} &#10148;
+                  </button>
+                </div>`;
+      }
+
+      // Questions (hidden initially in active mode, visible in review mode)
+      if (hasQuestions) {
+        const hiddenClass = reviewMode ? '' : ' hidden';
+        html += `<div class="questions-area${hiddenClass}" id="questions-area">`;
         html += `<div class="questions-section">`;
 
         if (reviewMode) {
@@ -1837,34 +1866,61 @@
           }
         });
 
-        html += `</div>`;
+        html += `</div>`; // close questions-section
+
+        // Submit button (inside questions-area)
+        if (reviewMode) {
+          html += `<div class="submit-section">
+                    <button class="btn btn-primary" onclick="showStopList()">
+                      &#8592; Terug naar de route
+                    </button>
+                  </div>`;
+        } else {
+          html += `<div class="submit-section">
+                    <button class="btn btn-success" id="submit-btn" onclick="submitAnswers()">
+                      Antwoord indienen &#10148;
+                    </button>
+                    <div class="submit-hint" id="submit-hint">Vul eerst alle vragen in</div>
+                  </div>`;
+        }
+
+        html += `</div>`; // close questions-area
       }
 
-      // Bottom section
-      if (reviewMode) {
-        html += `<div class="submit-section">
-                  <button class="btn btn-primary" onclick="showStopList()">
-                    &#8592; Terug naar de route
-                  </button>
-                </div>`;
-      } else if (!stop.questions || stop.questions.length === 0) {
-        // No questions - just video
-        html += `<div class="submit-section">
-                  <button class="btn btn-success" id="submit-btn" onclick="submitAnswers()">
-                    Video bekeken, ga verder &#10148;
-                  </button>
-                </div>`;
-      } else {
-        html += `<div class="submit-section">
-                  <button class="btn btn-success" id="submit-btn" onclick="submitAnswers()">
-                    Antwoord indienen &#10148;
-                  </button>
-                  <div class="submit-hint" id="submit-hint">Vul eerst alle vragen in</div>
-                </div>`;
+      // No questions: video-only submit or review back button
+      if (!hasQuestions) {
+        if (reviewMode) {
+          html += `<div class="submit-section">
+                    <button class="btn btn-primary" onclick="showStopList()">
+                      &#8592; Terug naar de route
+                    </button>
+                  </div>`;
+        } else {
+          html += `<div class="submit-section">
+                    <button class="btn btn-success" id="submit-btn" onclick="submitAnswers()">
+                      Video bekeken, ga verder &#10148;
+                    </button>
+                  </div>`;
+        }
       }
 
       content.innerHTML = html;
       showScreen('stop-screen');
+    }
+
+    // ============ REVEAL QUESTIONS ============
+    function revealQuestions() {
+      const btn = document.getElementById('reveal-questions-btn');
+      const area = document.getElementById('questions-area');
+      if (btn) btn.style.display = 'none';
+      if (area) {
+        area.classList.remove('hidden');
+        area.classList.add('revealing');
+        // Scroll to questions
+        setTimeout(() => {
+          area.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
     }
 
     // ============ SUBMIT ============

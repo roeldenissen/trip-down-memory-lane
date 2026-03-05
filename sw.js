@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trip-memory-lane-v2';
+const CACHE_NAME = 'trip-memory-lane-v3';
 
 // Core files to cache immediately on install
 const CORE_ASSETS = [

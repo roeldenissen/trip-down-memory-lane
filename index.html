@@ -809,12 +809,9 @@
       color: #8b2d2d;
     }
 
-    /* Portrait/vertical video */
-    .video-container.portrait {
-      padding-bottom: 0;
-      max-width: 320px;
-      margin: 0 auto;
-      aspect-ratio: 9 / 16;
+    /* Portrait/vertical video: same container, video fits inside */
+    .video-container.portrait video {
+      object-fit: contain;
     }
 
     /* Answer feedback */
@@ -883,20 +880,53 @@
 
     .submit-hint.show { opacity: 1; }
 
-    /* Reveal questions transition */
-    .reveal-questions-section {
+    /* Questions unlock transition (blur → sharp) */
+    .questions-area {
+      transition: filter 0.5s ease;
+      position: relative;
+    }
+    .questions-area.locked {
+      filter: blur(6px);
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .questions-area.locked .answer-input {
+      opacity: 0.5;
+    }
+    .unlock-questions-section {
       text-align: center;
-      padding: 20px 0 8px;
+      padding: 12px 0 8px;
     }
-    .questions-area.hidden {
-      display: none;
+    .btn-unlock {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 32px;
+      border: 2px solid var(--gold);
+      border-radius: 50px;
+      font-family: 'Lato', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--gold-dark);
+      background: rgba(201, 168, 76, 0.08);
+      transition: all 0.3s ease;
     }
-    .questions-area.revealing {
-      animation: fadeSlideIn 0.4s ease-out;
+    .btn-unlock:active {
+      transform: scale(0.97);
+      background: rgba(201, 168, 76, 0.18);
     }
-    @keyframes fadeSlideIn {
-      from { opacity: 0; transform: translateY(16px); }
-      to { opacity: 1; transform: translateY(0); }
+    .btn-unlock.unlocked {
+      opacity: 0;
+      pointer-events: none;
+      height: 0;
+      padding: 0;
+      margin: 0;
+      border: none;
+      overflow: hidden;
+      transition: all 0.4s ease;
     }
 
     /* Score display in success overlay */
@@ -1762,21 +1792,20 @@
       }
       html += `</div></div>`;
 
-      // "Naar de vragen" button (only in active mode when there are questions)
+      // Questions (blurred/locked initially in active mode, visible in review mode)
       const hasQuestions = stop.questions && stop.questions.length > 0;
-      if (hasQuestions && !reviewMode) {
-        const vraagTekst = stop.questions.length === 1 ? 'Naar de vraag' : 'Naar de vragen';
-        html += `<div class="reveal-questions-section" id="reveal-questions-btn">
-                  <button class="btn btn-primary" onclick="revealQuestions()">
-                    ${vraagTekst} &#10148;
-                  </button>
-                </div>`;
-      }
-
-      // Questions (hidden initially in active mode, visible in review mode)
       if (hasQuestions) {
-        const hiddenClass = reviewMode ? '' : ' hidden';
-        html += `<div class="questions-area${hiddenClass}" id="questions-area">`;
+        // Unlock button between video and questions (only in active mode)
+        if (!reviewMode) {
+          const vraagTekst = stop.questions.length === 1 ? 'Ontgrendel de vraag' : 'Ontgrendel de vragen';
+          html += `<div class="unlock-questions-section">
+                    <button class="btn-unlock" id="unlock-questions-btn" onclick="unlockQuestions()">
+                      &#128275; ${vraagTekst}
+                    </button>
+                  </div>`;
+        }
+        const lockedClass = reviewMode ? '' : ' locked';
+        html += `<div class="questions-area${lockedClass}" id="questions-area">`;
         html += `<div class="questions-section">`;
 
         if (reviewMode) {
@@ -1857,7 +1886,7 @@
                       <div class="question-number">${stop.questions.length > 1 ? `Vraag ${idx + 1}` : 'De vraag'}</div>
                       <div class="question-text">${escapeHtml(q.text)}</div>
                       <textarea class="${inputClass}" id="answer-${answerKey}"
-                        placeholder="${placeholder}" rows="${rows}">${escapeHtml(savedAnswer)}</textarea>`;
+                        placeholder="${placeholder}" rows="${rows}" disabled>${escapeHtml(savedAnswer)}</textarea>`;
             if (isMulti) {
               html += `<div class="multi-hint">Er zijn ${q.answers.length} mogelijke antwoorden</div>`;
             }
@@ -1908,18 +1937,21 @@
       showScreen('stop-screen');
     }
 
-    // ============ REVEAL QUESTIONS ============
-    function revealQuestions() {
-      const btn = document.getElementById('reveal-questions-btn');
+    // ============ UNLOCK QUESTIONS ============
+    function unlockQuestions() {
+      const btn = document.getElementById('unlock-questions-btn');
       const area = document.getElementById('questions-area');
-      if (btn) btn.style.display = 'none';
+      if (btn) btn.classList.add('unlocked');
       if (area) {
-        area.classList.remove('hidden');
-        area.classList.add('revealing');
+        area.classList.remove('locked');
+        // Enable inputs
+        area.querySelectorAll('.answer-input').forEach(input => {
+          input.disabled = false;
+        });
         // Scroll to questions
         setTimeout(() => {
           area.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
+        }, 200);
       }
     }
 
@@ -2227,7 +2259,7 @@
       try {
         // Wait for service worker to be ready
         const registration = await navigator.serviceWorker.ready;
-        const cache = await caches.open('trip-memory-lane-v2');
+        const cache = await caches.open('trip-memory-lane-v3');
 
         let cached = 0;
         const total = videoUrls.length;

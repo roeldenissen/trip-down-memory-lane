@@ -76,6 +76,9 @@ const CONFIG = {
             "Jim Reeves", 
             "Bahlsen Pinda's", 
             "The Gallery Club"
+            ],
+          hint: "Er zijn 8 goede antwoorden!"
+        }
           ]
     },
     {

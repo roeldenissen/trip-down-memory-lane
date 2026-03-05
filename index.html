@@ -1637,9 +1637,12 @@
 
       // Completed portion overlay (green path)
       if (completedIdx >= 0) {
+        const allCompleted = completedIdx === points.length - 1;
         const completedPts = [];
         if (startPt) completedPts.push(startPt);
         for (let i = 0; i <= completedIdx; i++) completedPts.push(points[i]);
+        // When all stops are done, extend green path to the destination
+        if (allCompleted && endPt) completedPts.push(endPt);
 
         let cPathD = `M ${completedPts[0].x} ${completedPts[0].y}`;
         for (let i = 1; i < completedPts.length; i++) {

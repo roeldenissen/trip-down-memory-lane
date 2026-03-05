@@ -1004,7 +1004,31 @@
       font-weight: 300;
       line-height: 1.5;
       max-width: 500px;
-      margin-bottom: 40px;
+      margin-bottom: 24px;
+    }
+
+    .finish-coordinates {
+      background: rgba(255,255,255,0.85);
+      border: 2px solid var(--gold);
+      border-radius: 16px;
+      padding: 20px 28px;
+      margin-bottom: 32px;
+      max-width: 400px;
+    }
+
+    .finish-coord-label {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--brown);
+      margin-bottom: 8px;
+    }
+
+    .finish-coord-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--gold);
+      font-family: 'Courier New', monospace;
+      letter-spacing: 1px;
     }
 
     /* ============ RESPONSIVE ============ */
@@ -1157,6 +1181,10 @@
     <div class="finish-icon">&#127881;</div>
     <h1 class="finish-title" id="finish-title">Gefeliciteerd!</h1>
     <p class="finish-text" id="finish-text"></p>
+    <div class="finish-coordinates" id="finish-coordinates" style="display:none;">
+      <div class="finish-coord-label">&#128205; De finishlocatie is onthuld!</div>
+      <div class="finish-coord-value" id="finish-coord-value"></div>
+    </div>
     <button class="btn btn-primary" onclick="showStopList()">
       Bekijk de route &#10148;
     </button>
@@ -1200,6 +1228,16 @@
       document.getElementById('total-count').textContent = CONFIG.stops.length;
       document.getElementById('finish-text').textContent =
         `${name1} & ${name2}, wat een prachtige tocht door ${years} jaar herinneringen!`;
+
+      // Show full coordinates on finish screen
+      if (CONFIG.finishCoordinates) {
+        const finishCoordEl = document.getElementById('finish-coordinates');
+        const finishCoordVal = document.getElementById('finish-coord-value');
+        if (finishCoordEl && finishCoordVal) {
+          finishCoordVal.textContent = CONFIG.finishCoordinates;
+          finishCoordEl.style.display = 'block';
+        }
+      }
       updateCompletedCount();
     }
 
@@ -1794,6 +1832,13 @@
                     &#8592; Terug naar de route
                   </button>
                 </div>`;
+      } else if (!stop.questions || stop.questions.length === 0) {
+        // No questions - just video
+        html += `<div class="submit-section">
+                  <button class="btn btn-success" id="submit-btn" onclick="submitAnswers()">
+                    Video bekeken, ga verder &#10148;
+                  </button>
+                </div>`;
       } else {
         html += `<div class="submit-section">
                   <button class="btn btn-success" id="submit-btn" onclick="submitAnswers()">
@@ -1811,8 +1856,19 @@
     function submitAnswers() {
       if (!currentStop || answersChecked) return;
 
-      let allFilled = true;
       const stop = currentStop;
+
+      // No questions? Skip straight to completion
+      if (!stop.questions || stop.questions.length === 0) {
+        answersChecked = true;
+        scores[stop.id] = { correct: 0, total: 0 };
+        completedStops.add(stop.id);
+        saveState();
+        showSuccessOverlay(stop, 0, 0);
+        return;
+      }
+
+      let allFilled = true;
 
       // First pass: check all fields are filled
       stop.questions.forEach((q, idx) => {
@@ -1954,18 +2010,23 @@
       const successCoord = document.getElementById('success-coord');
       const successCoordValue = document.getElementById('success-coord-value');
 
-      // Show score
-      successScore.textContent = `${correctCount} / ${totalQuestions}`;
-
-      if (correctCount === totalQuestions) {
-        successIcon.innerHTML = '&#127942;';
-        successTitle.textContent = 'Perfect!';
-      } else if (correctCount > 0) {
-        successIcon.innerHTML = '&#128079;';
-        successTitle.textContent = 'Goed gedaan!';
+      // Show score (or hide for video-only stops)
+      if (totalQuestions === 0) {
+        successScore.textContent = '';
+        successIcon.innerHTML = '&#127916;';
+        successTitle.textContent = 'Video bekeken!';
       } else {
-        successIcon.innerHTML = '&#128170;';
-        successTitle.textContent = 'Volgende keer beter!';
+        successScore.textContent = `${correctCount} / ${totalQuestions}`;
+        if (correctCount === totalQuestions) {
+          successIcon.innerHTML = '&#127942;';
+          successTitle.textContent = 'Perfect!';
+        } else if (correctCount > 0) {
+          successIcon.innerHTML = '&#128079;';
+          successTitle.textContent = 'Goed gedaan!';
+        } else {
+          successIcon.innerHTML = '&#128170;';
+          successTitle.textContent = 'Volgende keer beter!';
+        }
       }
 
       if (isLastStop) {
@@ -2095,7 +2156,7 @@
       try {
         // Wait for service worker to be ready
         const registration = await navigator.serviceWorker.ready;
-        const cache = await caches.open('trip-memory-lane-v1');
+        const cache = await caches.open('trip-memory-lane-v2');
 
         let cached = 0;
         const total = videoUrls.length;

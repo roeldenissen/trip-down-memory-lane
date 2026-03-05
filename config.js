@@ -59,44 +59,46 @@ const CONFIG = {
   stops: [
     {
       id: 1,
-      title: "Waar het allemaal begon",
-      address: "Adres stop 1, Tilburg",
-      description: "De plek waar Wilma en Kees elkaar voor het eerst ontmoetten.",
-      video: "",  // bijv. "assets/videos/stop1.mp4"
-      questions: [
-        {
-          text: "In welk jaar ontmoetten jullie elkaar voor het eerst?",
-          answer: "1983",
-          hint: "Jullie kennen elkaar al langer dan je denkt!"
-        }
-      ]
+      title: "De Schuur",
+      address: "Heuvelring 114, Tilburg",
+      description: "Hier wacht een videoboodschap van Loes & Cor!",
+      video: "assets/videos/stop1.mp4",
+      questions: []
     },
     {
-      // === NIEUWE STOP - VUL HIERONDER AAN ===
       id: 2,
-      title: "TODO: Titel nieuwe stop",
-      address: "TODO: Adres nieuwe stop",
-      description: "TODO: Beschrijving nieuwe stop.",
-      video: "",  // bijv. "assets/videos/stop2.mp4"
+      title: "Koffie",
+      address: "Frederikstraat 284, Tilburg",
+      description: "Tijd voor koffie en een boodschap van Wilma & Els!",
+      video: "assets/videos/stop2.mp4",
       questions: [
         {
-          text: "TODO: Vraag voor nieuwe stop?",
-          answer: "TODO",
-          hint: ""
+          text: "Wat was Wilma vergeten op het weekendje weg met de kids?",
+          answer: "Dekbedovertrek",
+          hint: "Iets waar je lekker onder slaapt!"
+        },
+        {
+          text: "Bij welke winkel is de e-bike gestolen?",
+          answer: "Action",
+          hint: "Goedkoop"
         }
       ]
     },
     {
       id: 3,
-      title: "Het eerste afspraakje",
-      address: "Adres stop 3, Tilburg",
-      description: "Hier hadden Wilma en Kees hun allereerste date.",
-      video: "",
+      title: "De Groeseind",
+      address: "Groeseindstraat 65a, Tilburg",
+      description: "Een bekende plek met een boodschap van Helen!",
+      video: "assets/videos/stop3.mp4",
       questions: [
         {
-          text: "Wat deden jullie op jullie eerste afspraakje?",
-          answer: "Bioscoopje",
-          hint: ""
+          text: "Welk merk shag rookte Kees?",
+          type: "multi",
+          answers: [
+            "Drum",
+            "Samson"
+          ],
+          hint: "Er zijn 2 goede antwoorden!"
         }
       ]
     },
@@ -104,35 +106,19 @@ const CONFIG = {
       id: 4,
       title: "Textielmuseum",
       address: "Goirkestraat 96, Tilburg",
-      description: "Een stukje historie van jullie stad",
+      description: "Een stukje historie met een videoboodschap van Rick!",
       video: "assets/videos/stop4.mp4",
-      questions: [
-        {
-          text: "Wat gebeurde er met de fiets van elk paaltje?",
-          answer: "Kapot",
-          hint: "Kaduuk"
-        },
-        {
-          text: "Wat was Wilma met het weekendje weg met de kids vergeten?",
-          answer: "Pyjama",
-          hint: "Je slaapt erin"
-        },
-        {
-          text: "Bij welke winkel is de E-bike gestolen?",
-          answer: "Action",
-          hint: "Goedkoop"
-        }
-      ]
+      questions: []
     },
     {
       id: 5,
-      title: "De trouwlocatie",
-      address: "Adres stop 5, Oisterwijk",
-      description: "Hier gaven Wilma en Kees elkaar het ja-woord.",
-      video: "",
+      title: "De Hasselt",
+      address: "Hasseltstraat 169, Tilburg",
+      description: "Terug naar de Hasseltstraat met een boodschap van Bertens!",
+      video: "assets/videos/stop5.mp4",
       questions: [
         {
-          text: "Noem zoveel mogelijk winkels op!",
+          text: "Welke winkeliers zaten er vroeger in de Hasseltstraat?",
           type: "multi",
           answers: [
             "Bertens van Iersel",
@@ -159,6 +145,7 @@ const CONFIG = {
             "slagerij Konings",
             "café Moorees",
             "drukkerij Rijnen",
+            "dameskapsalon",
             "bakker van Kempen",
             "van Knegsel",
             "rijschool van de Ven",
@@ -175,56 +162,70 @@ const CONFIG = {
     },
     {
       id: 6,
-      title: "Het eerste huis",
-      address: "Adres stop 6, Tilburg",
-      description: "Het eerste eigen stekje van het kersverse echtpaar.",
-      video: "",
+      title: "Hazelaar",
+      address: "Doctor Eijgenraamstraat 3, Tilburg",
+      description: "Op bezoek bij de Hazelaar met een boodschap van Wilma!",
+      video: "assets/videos/stop6.mp4",
       portrait: true,
       questions: [
         {
-          text: "Wat weet jij van ...? Noem zoveel mogelijk dingen!",
+          text: "Wat weten jullie van het kwekfestijn?",
           type: "multi",
           answers: [
-            "PLACEHOLDER_ANTWOORD_1",
-            "PLACEHOLDER_ANTWOORD_2",
-            "PLACEHOLDER_ANTWOORD_3"
+            "Feest",
+            "Bonte avond",
+            "openingsfeest",
+            "bewoners",
+            "trefcentrum",
+            "personeel",
+            "imitaties",
+            "muziek",
+            "carnaval"
           ],
-          hint: "Er zijn meerdere goede antwoorden!"
+          hint: "Er zijn 9 mogelijke antwoorden!"
         }
       ]
     },
     {
       id: 7,
-      title: "Een bijzondere herinnering",
-      address: "Adres stop 7, Oisterwijk",
-      description: "Een plek die verbonden is aan een onvergetelijk moment.",
-      video: "",
+      title: "Den Akker",
+      address: "Lavendel 3, Oisterwijk",
+      description: "De laatste stop met een boodschap van Julie!",
+      video: "assets/videos/stop7.mp4",
       questions: [
         {
-          text: "Welke herinnering komt als eerste boven bij deze plek?",
-          answer: "De zomer van 1990",
+          text: "Met welke quiz heeft Kees vroeger meegedaan?",
+          answer: "Buya",
           hint: ""
-        }
-      ]
-    },
-    {
-      id: 8,
-      title: "Favoriete uitje",
-      address: "Adres stop 8, Oisterwijk",
-      description: "Hier kwamen Wilma en Kees graag samen.",
-      video: "",
-      questions: [
+        },
         {
-          text: "Hoe vaak kwamen jullie hier vroeger?",
-          answer: "Elke week",
-          hint: ""
+          text: "Welke Oisterwijkse basisscholen kennen jullie nog uit de tijd dat Kees startte bij Den Akker?",
+          type: "multi",
+          answers: [
+            "St. Jozefschool",
+            "St. Antoniusschool",
+            "H. Bernadetteschool",
+            "De Kikkenduut",
+            "De Bron",
+            "De Hasselbraam",
+            "Den Akker",
+            "Darwin",
+            "De Bunders",
+            "De Zwaluw",
+            "Merlijn",
+            "De Kajuit",
+            "De Coppele",
+            "De Mozaïk"
+          ],
+          hint: "Er zijn 14 scholen!"
         }
       ]
-    },
+    }
   ],
 
-  // Geheime coördinaten van de finish (stop 8)
-  // Na elke stop 1-7 wordt een stukje onthuld
+  // Geheime coördinaten van de finish
+  // Na elke stop 1-6 wordt een stukje onthuld
+  // Na stop 7 (de laatste) worden de volledige coördinaten getoond op het eindscherm
   finishCoordinates: "51.58931° N, 5.23185° E",
   // Hoe de coördinaten stap voor stap onthuld worden:
   // Na stop 1: "51.5____° N, _.____° E"
@@ -233,14 +234,12 @@ const CONFIG = {
   // Na stop 4: "51.589__° N, 5.____° E"
   // Na stop 5: "51.5893_° N, 5.2___° E"
   // Na stop 6: "51.58931° N, 5.23__° E"
-  // Na stop 7: "51.58931° N, 5.23185° E" (volledig!)
   coordinateReveals: [
     "51.5____° N, _.____° E",
     "51.58___° N, _.____° E",
     "51.589__° N, _.____° E",
     "51.589__° N, 5.____° E",
     "51.5893_° N, 5.2___° E",
-    "51.58931° N, 5.23__° E",
-    "51.58931° N, 5.23185° E"
+    "51.58931° N, 5.23__° E"
   ]
 };

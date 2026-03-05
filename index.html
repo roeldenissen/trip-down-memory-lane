@@ -484,70 +484,73 @@
     .route-marker.finish { padding-top: 4px; }
 
     /* Last stop = finish styling */
-    .stop-list-item.is-finish {
-      border-left-color: var(--gold) !important;
-      background: linear-gradient(135deg, rgba(255,255,255,0.97) 0%, rgba(253,248,238,0.97) 100%);
-      box-shadow: 0 4px 24px rgba(201, 168, 76, 0.25);
-    }
-    .stop-list-item.is-finish .stop-list-number {
-      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
-      font-size: 14px;
-    }
-    .stop-list-item.is-finish.completed {
-      border-left-color: var(--success) !important;
-      background: linear-gradient(135deg, rgba(255,255,255,0.97) 0%, rgba(240,248,240,0.97) 100%);
-    }
-    .stop-list-item.is-finish.completed .stop-list-number {
-      background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
-    }
-    .finish-badge {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--gold-dark);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      margin-top: 2px;
-    }
-    .finish-badge-icon { font-size: 13px; }
-
-    /* Coordinate reveal card */
-    .coord-reveal {
-      background: linear-gradient(135deg, rgba(253,248,238,0.95) 0%, rgba(232,213,163,0.5) 100%);
-      border: 2px dashed var(--gold);
-      border-radius: var(--radius);
-      padding: 14px 18px;
-      margin: 12px auto;
-      max-width: 380px;
-      text-align: center;
+    /* Route destination (mystery coordinates at end of route) */
+    .route-destination {
       position: relative;
       z-index: 2;
+      background: linear-gradient(135deg, rgba(253,248,238,0.97) 0%, rgba(232,213,163,0.4) 100%);
+      border: 2px dashed var(--gold);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin: 0 auto;
+      max-width: 380px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
     }
-    .coord-reveal-label {
+    .route-destination.revealed {
+      border-style: solid;
+      border-color: var(--gold);
+      background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(253,248,238,0.98) 100%);
+      box-shadow: 0 4px 24px rgba(201, 168, 76, 0.3);
+    }
+    .route-destination-icon {
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: white;
+      box-shadow: 0 2px 8px rgba(201, 168, 76, 0.4);
+    }
+    .route-destination.revealed .route-destination-icon {
+      background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+      box-shadow: 0 2px 8px rgba(90, 143, 90, 0.4);
+    }
+    .route-destination-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .route-destination-label {
       font-size: 11px;
       font-weight: 700;
       color: var(--gold-dark);
       text-transform: uppercase;
       letter-spacing: 1.5px;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
-    .coord-reveal-value {
+    .route-destination.revealed .route-destination-label {
+      color: var(--success-dark);
+    }
+    .route-destination-coords {
       font-family: 'Courier New', monospace;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 700;
       color: var(--brown);
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
     }
-    .coord-reveal-value .coord-hidden {
+    .route-destination-coords .coord-hidden {
       color: var(--gold-light);
       opacity: 0.5;
     }
-    .coord-reveal-hint {
+    .route-destination-hint {
       font-size: 12px;
       color: var(--text-light);
-      margin-top: 6px;
+      margin-top: 4px;
       font-style: italic;
     }
 
@@ -1390,26 +1393,21 @@
       CONFIG.stops.forEach((stop, index) => {
         const status = getStopStatus(stop, index);
         const marginPct = (positions[index] * 100).toFixed(1);
-        const isFinish = index === CONFIG.stops.length - 1;
-        const finishClass = isFinish ? ' is-finish' : '';
 
         // Connector between stops
         html += `<div class="stop-list-connector"></div>`;
 
         const clickable = status === 'completed' ? ` onclick="showStop(${stop.id}, true)"` : '';
-        html += `<div class="stop-list-item ${status}${finishClass}" style="margin-left:${marginPct}%"${clickable}>`;
-        html += `<div class="stop-list-number">${isFinish ? '&#127937;' : stop.id}</div>`;
+        html += `<div class="stop-list-item ${status}" style="margin-left:${marginPct}%"${clickable}>`;
+        html += `<div class="stop-list-number">${stop.id}</div>`;
         html += `<div class="stop-list-info">`;
         html += `<div class="stop-list-title">${escapeHtml(stop.title)}</div>`;
         html += `<div class="stop-list-address">${escapeHtml(stop.address)}</div>`;
-        if (isFinish) {
-          html += `<div class="finish-badge"><span class="finish-badge-icon">&#127881;</span> De finish!</div>`;
-        }
         html += `</div>`;
         html += `<div class="stop-list-action">`;
         if (status === 'completed') {
           const stopScore = scores[stop.id];
-          const scoreText = stopScore ? `${stopScore.correct}/${stopScore.total}` : '';
+          const scoreText = stopScore && stopScore.total > 0 ? `${stopScore.correct}/${stopScore.total}` : '';
           html += `<div class="stop-list-check">`;
           html += `<div class="stop-list-check-icon">&#10003;</div>`;
           if (scoreText) html += `<span class="stop-list-score">${scoreText}</span>`;
@@ -1423,23 +1421,37 @@
         html += `</div>`;
       });
 
-      html += `</div>`; // close route-items
-
-      // Coordinate reveal card (shown after at least 1 stop is completed, before finish)
+      // Finish destination: mystery coordinates
       const numCompleted = completedStops.size;
-      if (CONFIG.coordinateReveals && numCompleted > 0 && numCompleted <= CONFIG.coordinateReveals.length) {
+      const allDone = numCompleted >= CONFIG.stops.length;
+
+      html += `<div class="stop-list-connector"></div>`;
+      html += `<div class="route-destination${allDone ? ' revealed' : ''}" id="route-destination">`;
+      html += `<div class="route-destination-icon">${allDone ? '&#127937;' : '&#10068;'}</div>`;
+      html += `<div class="route-destination-info">`;
+
+      if (allDone && CONFIG.finishCoordinates) {
+        // All stops done: show full coordinates
+        html += `<div class="route-destination-label">De finish!</div>`;
+        html += `<div class="route-destination-coords">${CONFIG.finishCoordinates}</div>`;
+        html += `<div class="route-destination-hint">Zoek deze locatie op en fiets erheen! &#128690;</div>`;
+      } else if (numCompleted > 0 && CONFIG.coordinateReveals && numCompleted <= CONFIG.coordinateReveals.length) {
+        // Some stops done: show partial coordinates
         const coordText = CONFIG.coordinateReveals[numCompleted - 1];
-        const isFullReveal = numCompleted >= CONFIG.coordinateReveals.length;
-        html += `<div class="coord-reveal">`;
-        html += `<div class="coord-reveal-label">${isFullReveal ? 'De finish-co\u00f6rdinaten!' : 'Co\u00f6rdinaten van de finish'}</div>`;
-        html += `<div class="coord-reveal-value">${formatCoordReveal(coordText)}</div>`;
-        if (!isFullReveal) {
-          html += `<div class="coord-reveal-hint">Nog ${CONFIG.coordinateReveals.length - numCompleted} stop${CONFIG.coordinateReveals.length - numCompleted === 1 ? '' : 's'} voor de volledige co\u00f6rdinaten</div>`;
-        } else {
-          html += `<div class="coord-reveal-hint">Zoek deze locatie op en fiets erheen!</div>`;
-        }
-        html += `</div>`;
+        html += `<div class="route-destination-label">Mysterie-bestemming</div>`;
+        html += `<div class="route-destination-coords">${formatCoordReveal(coordText)}</div>`;
+        html += `<div class="route-destination-hint">Nog ${CONFIG.stops.length - numCompleted} stop${CONFIG.stops.length - numCompleted === 1 ? '' : 's'} te gaan...</div>`;
+      } else {
+        // No stops done yet: fully hidden
+        html += `<div class="route-destination-label">Mysterie-bestemming</div>`;
+        html += `<div class="route-destination-coords">${formatCoordReveal('__._____° N, _._____° E')}</div>`;
+        html += `<div class="route-destination-hint">Rond elke stop af om de co\u00f6rdinaten te onthullen!</div>`;
       }
+
+      html += `</div>`;
+      html += `</div>`;
+
+      html += `</div>`; // close route-items
 
       container.innerHTML = html;
 
@@ -1479,14 +1491,14 @@
 
       // Add start and end points
       const startMarker = container.querySelector('.route-marker.start');
-      const finishMarker = container.querySelector('.route-marker.finish');
+      const destinationEl = container.querySelector('.route-destination');
       let startPt = null, endPt = null;
       if (startMarker) {
         const r = startMarker.getBoundingClientRect();
         startPt = { x: (r.left + r.width / 2) - containerRect.left, y: (r.bottom) - containerRect.top + scrollTop };
       }
-      if (finishMarker) {
-        const r = finishMarker.getBoundingClientRect();
+      if (destinationEl) {
+        const r = destinationEl.getBoundingClientRect();
         endPt = { x: (r.left + r.width / 2) - containerRect.left, y: (r.top) - containerRect.top + scrollTop };
       }
 

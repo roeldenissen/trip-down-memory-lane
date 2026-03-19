@@ -127,11 +127,7 @@ const CONFIG = {
       questions: [
         {
           text: "Hoe heet de boer van de vakantie in Luxemburg?",
-          type: "multi",
-          answers: [
-            "Herr Wolter",
-            "Wolter"
-          ],
+          answer: "Wolter",
           hint: ""
         }
       ]

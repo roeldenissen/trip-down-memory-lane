@@ -124,7 +124,17 @@ const CONFIG = {
       address: "Goirkestraat 96, Tilburg",
       description: "Een stukje historie met een videoboodschap van Rick!",
       video: "assets/videos/stop4.mp4",
-      questions: []
+      questions: [
+        {
+          text: "Hoe heet de boer van de vakantie in Luxemburg?",
+          type: "multi",
+          answers: [
+            "Herr Wolter",
+            "Wolter"
+          ],
+          hint: ""
+        }
+      ]
     },
     {
       id: 5,
